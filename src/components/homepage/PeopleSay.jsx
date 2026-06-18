@@ -140,7 +140,7 @@ export default function PeopleSay() {
   return (
     <section
       ref={containerRef}
-      className="relative overflow-hidden bg-[#020410] py-24 lg:py-32 border-b border-white/[0.01]"
+      className="relative overflow-hidden bg-[#020410] py-16 lg:py-32 border-b border-white/[0.01]"
     >
       {/* Background Deep Light System */}
       <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.03)_0%,transparent_70%)]" />

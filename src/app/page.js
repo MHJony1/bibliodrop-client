@@ -1,4 +1,5 @@
 import Banner from '@/components/homepage/Banner';
+import CTASection from '@/components/homepage/CTASection';
 import FeaturedBooks from '@/components/homepage/FeaturedBooks';
 import FeaturedLibrarians from '@/components/homepage/FeaturedLibrarians';
 import HowItWorks from '@/components/homepage/HowItWorks';
@@ -19,13 +20,14 @@ export default function Home() {
 
       <StatsSection />
 
-      <section id="categories">
+      {/* <section id="categories">
         <PopularCategories />
-      </section>
+      </section> */}
 
       <FeaturedLibrarians />
-      <PeopleSay />
       <WhyChooseUs />
+      <PeopleSay />
+      <CTASection />
     </>
   );
 }
