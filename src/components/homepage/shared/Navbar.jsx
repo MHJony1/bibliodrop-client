@@ -3,42 +3,43 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  BookOpen, Moon, Sun, Menu, X,
-  LayoutDashboard, LogOut, User, ChevronDown,
+  BookOpen,
+  Moon,
+  Sun,
+  Menu,
+  X,
+  LayoutDashboard,
+  LogOut,
+  User,
+  ChevronDown,
 } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
+import toast from 'react-hot-toast';
 
 /* ─────────────────────────────────────────
    NAV LINKS
 ───────────────────────────────────────── */
 const navLinks = [
-  { label: 'Home',         href: '/' },
+  { label: 'Home', href: '/' },
   { label: 'Browse Books', href: '/browsebooks' },
   { label: 'How It Works', href: '/how-it-works' },
-  { label: 'Categories',   href: '/categories' },
-  { label: 'About Us',     href: '/about' },
-  { label: 'Contact',      href: '/contact' },
+  { label: 'Categories', href: '/categories' },
+  { label: 'About Us', href: '/about' },
+  { label: 'Contact', href: '/contact' },
 ];
 
 /* ─────────────────────────────────────────
-   MOCK AUTH HOOK
-───────────────────────────────────────── */
-function useAuth() {
-  const [user] = useState(null);
-  return { user };
-}
-
-/* ─────────────────────────────────────────
-   AVATAR
+   AVATAR COMPONENT (DYNAMIC)
 ───────────────────────────────────────── */
 function Avatar({ user, size = 32 }) {
   if (user?.image) {
     return (
       <Image
         src={user.image}
-        alt={user.name}
+        alt={user.name || 'User'}
         width={size}
         height={size}
         className="rounded-full object-cover ring-2 ring-[#6D4AFF]/40"
@@ -62,7 +63,11 @@ function Avatar({ user, size = 32 }) {
 ═══════════════════════════════════════════ */
 export default function Navbar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const router = useRouter();
+
+  // Better-Auth রিয়েল-টাইম ডাইনামিক সেশন হুক (Mock Auth রিমুভড)
+  const { data: session } = authClient.useSession();
+  const user = session?.user;
 
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -72,7 +77,7 @@ export default function Navbar() {
 
   const userMenuRef = useRef(null);
 
-  /* ── Hydration ফিক্স: মাউন্ট হওয়ার পর থিম রিড করা ── */
+  /* ── Hydration ফিক্স: মাউন্ট হওয়ার পর থিম রিড করা ── */
   useEffect(() => {
     setMounted(true);
     const saved = localStorage.getItem('bibliodrop-theme');
@@ -88,7 +93,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', fn);
   }, []);
 
-  /* ── রাউট চেঞ্জ হলে ড্রয়ার ও মেনু বন্ধ করা ── */
+  /* ── রাউট চেঞ্জ হলে ড্রয়ার ও মেনু বন্ধ করা ── */
   useEffect(() => {
     setMobileOpen(false);
     setUserMenuOpen(false);
@@ -118,14 +123,32 @@ export default function Navbar() {
   const isActive = (href) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href);
 
-  const handleSignOut = () => {
+  /* ── ডাইনামিক সাইন আউট হ্যান্ডলার ── */
+  const handleSignOut = async () => {
     setUserMenuOpen(false);
-    console.log('sign out');
+    setMobileOpen(false);
+
+    try {
+      await authClient.signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            toast.success('Logged out successfully! 👋');
+            router.push('/');
+            router.refresh();
+          },
+        },
+      });
+    } catch (error) {
+      console.error('Sign out error:', error);
+      toast.error('Failed to log out. Please try again.');
+    }
   };
 
-  // Hydration Mismatch পুরোপুরি দূর করতে মাউন্ট হওয়ার আগে একটি স্টেবল ব্ল্যাঙ্ক হেডার দেওয়া হলো
+  // Hydration Mismatch পুরোপুরি দূর করতে মাউন্ট হওয়ার আগে একটি স্টেবল ব্ল্যাঙ্ক হেডার দেওয়া হলো
   if (!mounted) {
-    return <header className="fixed top-0 left-0 right-0 z-50 h-[72px] bg-transparent" />;
+    return (
+      <header className="fixed top-0 left-0 right-0 z-50 h-[72px] bg-transparent" />
+    );
   }
 
   return (
@@ -142,9 +165,11 @@ export default function Navbar() {
         }`}
       >
         <nav className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
-          
           {/* ── LOGO ── */}
-          <Link href="/" className="flex items-center gap-2.5 shrink-0 group no-underline">
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 shrink-0 group no-underline"
+          >
             <div className="w-[38px] h-[38px] rounded-[11px] shrink-0 bg-gradient-to-br from-[#6D4AFF] to-[#8B5CF6] flex items-center justify-center shadow-[0_0_18px_rgba(109,74,255,0.5)] group-hover:shadow-[0_0_28px_rgba(109,74,255,0.7)] transition-shadow duration-300">
               <BookOpen size={20} color="#fff" strokeWidth={2} />
             </div>
@@ -190,7 +215,7 @@ export default function Navbar() {
               {isDark ? <Moon size={15} /> : <Sun size={15} />}
             </button>
 
-            {/* ── AUTH: Logged Out ── */}
+            {/* ── AUTH: Logged Out (ডাইনামিক) ── */}
             {!user && (
               <>
                 <Link
@@ -208,7 +233,7 @@ export default function Navbar() {
               </>
             )}
 
-            {/* ── AUTH: Logged In ── */}
+            {/* ── AUTH: Logged In (ডাইনামিক) ── */}
             {user && (
               <div ref={userMenuRef} className="hidden lg:block relative">
                 <button
@@ -253,7 +278,10 @@ export default function Navbar() {
                           href="/dashboard"
                           className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[13px] font-medium no-underline text-gray-700 dark:text-[#B8B8C5] hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/6 transition-all duration-150"
                         >
-                          <LayoutDashboard size={15} className="text-[#6D4AFF] shrink-0" />
+                          <LayoutDashboard
+                            size={15}
+                            className="text-[#6D4AFF] shrink-0"
+                          />
                           Dashboard
                         </Link>
 
@@ -296,7 +324,7 @@ export default function Navbar() {
 
       {/* ═══════════════════════════════════════
           MOBILE DRAWER
-      ═══════════════════════════════════════ */}
+       ═══════════════════════════════════════ */}
       <AnimatePresence>
         {mobileOpen && (
           <>
@@ -318,12 +346,17 @@ export default function Navbar() {
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               className="fixed top-0 right-0 bottom-0 z-40 lg:hidden w-[min(300px,100vw)] flex flex-col bg-white dark:bg-[#08092A] border-l border-black/8 dark:border-white/8 shadow-[-16px_0_48px_rgba(0,0,0,0.1)] dark:shadow-[-16px_0_48px_rgba(0,0,0,0.6)] pt-[80px] pb-8"
             >
+              {/* Mobile Profile View */}
               {user && (
                 <div className="mx-4 mb-3 p-3.5 rounded-2xl border border-black/6 dark:border-white/8 bg-black/3 dark:bg-white/4 flex items-center gap-3">
                   <Avatar user={user} size={40} />
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white truncate m-0">{user.name}</p>
-                    <p className="text-[11px] text-gray-500 dark:text-[#B8B8C5] truncate m-0">{user.email}</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white truncate m-0">
+                      {user.name}
+                    </p>
+                    <p className="text-[11px] text-gray-500 dark:text-[#B8B8C5] truncate m-0">
+                      {user.email}
+                    </p>
                   </div>
                 </div>
               )}
@@ -374,14 +407,28 @@ export default function Navbar() {
                   onClick={toggleTheme}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl border border-black/8 dark:border-white/8 bg-black/3 dark:bg-white/4 text-sm font-medium text-gray-700 dark:text-[#B8B8C5] cursor-pointer transition-all duration-200"
                 >
-                  {isDark ? <Moon size={16} className="text-[#6D4AFF]" /> : <Sun size={16} className="text-amber-500" />}
+                  {isDark ? (
+                    <Moon size={16} className="text-[#6D4AFF]" />
+                  ) : (
+                    <Sun size={16} className="text-amber-500" />
+                  )}
                   {isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                 </button>
 
                 {!user ? (
                   <>
-                    <Link href="/login" className="block text-center py-3 rounded-xl border border-black/10 dark:border-white/10 bg-black/4 dark:bg-white/5 text-sm font-semibold no-underline text-gray-900 dark:text-white transition-all duration-200">Login</Link>
-                    <Link href="/register" className="block text-center py-3 rounded-xl bg-[#F7B500] text-[#05081F] text-sm font-bold no-underline shadow-[0_4px_16px_rgba(247,181,0,0.3)] transition-all duration-200">Register</Link>
+                    <Link
+                      href="/auth/login"
+                      className="block text-center py-3 rounded-xl border border-black/10 dark:border-white/10 bg-black/4 dark:bg-white/5 text-sm font-semibold no-underline text-gray-900 dark:text-white transition-all duration-200"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href="/auth/register"
+                      className="block text-center py-3 rounded-xl bg-[#F7B500] text-[#05081F] text-sm font-bold no-underline shadow-[0_4px_16px_rgba(247,181,0,0.3)] transition-all duration-200"
+                    >
+                      Register
+                    </Link>
                   </>
                 ) : (
                   <button
