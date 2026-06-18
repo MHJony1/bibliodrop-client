@@ -6,7 +6,6 @@ import {
   BookOpen, Mail, Phone, MapPin, 
   ArrowRight, ShieldCheck, RefreshCw, Truck 
 } from 'lucide-react';
-// React Icons থেকে ব্র্যান্ড আইকনগুলো ইম্পোর্ট করা হলো যেন কোনো এরর না আসে
 import { FaFacebookF, FaXTwitter, FaInstagram, FaLinkedinIn } from 'react-icons/fa6';
 
 const Footer = () => {
@@ -29,7 +28,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="relative bg-[#05081F] border-t border-white/5 text-[#B8B8C5] overflow-hidden pt-16 pb-8 font-sans">
+    <footer id="contact" className="relative bg-[#05081F] border-t border-white/5 text-[#B8B8C5] overflow-hidden pt-16 pb-8 font-sans">
       {/* Background Subtle Glows */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#6D4AFF]/10 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#F7B500]/5 rounded-full blur-[120px] pointer-events-none" />

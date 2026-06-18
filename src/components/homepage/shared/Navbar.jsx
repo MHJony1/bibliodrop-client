@@ -20,19 +20,19 @@ import { authClient } from '@/lib/auth-client';
 import toast from 'react-hot-toast';
 
 /* ─────────────────────────────────────────
-   NAV LINKS
+    NAV LINKS (WITH SECTIONS)
 ───────────────────────────────────────── */
 const navLinks = [
   { label: 'Home', href: '/' },
   { label: 'Browse Books', href: '/browsebooks' },
-  { label: 'How It Works', href: '/how-it-works' },
-  { label: 'Categories', href: '/categories' },
-  { label: 'About Us', href: '/about' },
-  { label: 'Contact', href: '/contact' },
+  { label: 'How It Works', href: '/#how-it-works', isScroll: true },
+  { label: 'Categories', href: '/#categories', isScroll: true },
+  { label: 'About Us', href: '/aboutUs' },
+  { label: 'Contact', href: '/#contact', isScroll: true },
 ];
 
 /* ─────────────────────────────────────────
-   AVATAR COMPONENT (DYNAMIC)
+    AVATAR COMPONENT
 ───────────────────────────────────────── */
 function Avatar({ user, size = 32 }) {
   if (user?.image) {
@@ -59,13 +59,12 @@ function Avatar({ user, size = 32 }) {
 }
 
 /* ═══════════════════════════════════════════
-   NAVBAR COMPONENT
+    NAVBAR COMPONENT
 ═══════════════════════════════════════════ */
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  // Better-Auth রিয়েল-টাইম ডাইনামিক সেশন হুক (Mock Auth রিমুভড)
   const { data: session } = authClient.useSession();
   const user = session?.user;
 
@@ -75,9 +74,11 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(true);
 
+  // হোমপেজের কোন সেকশনটি বর্তমানে স্ক্রিনে আছে তা ট্র্যাক করার স্টেট
+  const [activeSection, setActiveSection] = useState('home');
+
   const userMenuRef = useRef(null);
 
-  /* ── Hydration ফিক্স: মাউন্ট হওয়ার পর থিম রিড করা ── */
   useEffect(() => {
     setMounted(true);
     const saved = localStorage.getItem('bibliodrop-theme');
@@ -86,20 +87,61 @@ export default function Navbar() {
     document.documentElement.classList.toggle('dark', dark);
   }, []);
 
-  /* ── স্ক্রোল হ্যান্ডলিং ── */
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
   }, []);
 
-  /* ── রাউট চেঞ্জ হলে ড্রয়ার ও মেনু বন্ধ করা ── */
+  // ── Intersection Observer:
+  useEffect(() => {
+    if (pathname !== '/') return;
+
+    const sections = ['how-it-works', 'categories', 'contact'];
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '-40% 0px -40% 0px', 
+      threshold: 0,
+    };
+
+    const observerCallback = (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          setActiveSection(entry.target.id);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(
+      observerCallback,
+      observerOptions,
+    );
+
+    sections.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+   
+    const handleScrollTop = () => {
+      if (window.scrollY < 120) {
+        setActiveSection('home');
+      }
+    };
+    window.addEventListener('scroll', handleScrollTop, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', handleScrollTop);
+    };
+  }, [pathname]);
+
   useEffect(() => {
     setMobileOpen(false);
     setUserMenuOpen(false);
   }, [pathname]);
 
-  /* ── বাইরে ক্লিক করলে ড্রপডাউন বন্ধ করা ── */
   useEffect(() => {
     const fn = (e) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
@@ -110,7 +152,6 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', fn);
   }, []);
 
-  /* ── থিম টগল ── */
   const toggleTheme = () => {
     setIsDark((prev) => {
       const next = !prev;
@@ -120,14 +161,40 @@ export default function Navbar() {
     });
   };
 
-  const isActive = (href) =>
-    href === '/' ? pathname === '/' : pathname.startsWith(href);
+  const handleNavLinkClick = (e, link) => {
+    if (link.isScroll) {
+      if (pathname === '/') {
+        e.preventDefault();
+        const targetId = link.href.replace('/#', '');
+        const elem = document.getElementById(targetId);
+        if (elem) {
+          elem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          setActiveSection(targetId); 
+        }
+      }
+    }
+    setMobileOpen(false);
+  };
 
-  /* ── ডাইনামিক সাইন আউট হ্যান্ডলার ── */
+  const isActive = (link) => {
+    if (pathname === '/') {
+      if (link.href === '/') return activeSection === 'home';
+      if (link.isScroll) {
+        return activeSection === link.href.replace('/#', '');
+      }
+      return false;
+    }
+
+    
+    if (link.isScroll) return false;
+    return link.href === '/'
+      ? pathname === '/'
+      : pathname.startsWith(link.href);
+  };
+
   const handleSignOut = async () => {
     setUserMenuOpen(false);
     setMobileOpen(false);
-
     try {
       await authClient.signOut({
         fetchOptions: {
@@ -144,7 +211,6 @@ export default function Navbar() {
     }
   };
 
-  // Hydration Mismatch পুরোপুরি দূর করতে মাউন্ট হওয়ার আগে একটি স্টেবল ব্ল্যাঙ্ক হেডার দেওয়া হলো
   if (!mounted) {
     return (
       <header className="fixed top-0 left-0 right-0 z-50 h-[72px] bg-transparent" />
@@ -153,7 +219,7 @@ export default function Navbar() {
 
   return (
     <>
-      {/* ───────────── HEADER ───────────── */}
+      {/* HEADER */}
       <motion.header
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -165,7 +231,7 @@ export default function Navbar() {
         }`}
       >
         <nav className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
-          {/* ── LOGO ── */}
+          {/* LOGO */}
           <Link
             href="/"
             className="flex items-center gap-2.5 shrink-0 group no-underline"
@@ -183,14 +249,15 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* ── DESKTOP LINKS ── */}
+          {/* DESKTOP LINKS */}
           <ul className="hidden lg:flex items-center gap-0.5 list-none m-0 p-0 flex-1 justify-center">
             {navLinks.map((link) => {
-              const active = isActive(link.href);
+              const active = isActive(link);
               return (
                 <li key={link.label}>
                   <Link
                     href={link.href}
+                    onClick={(e) => handleNavLinkClick(e, link)}
                     className={`block px-4 py-2 rounded-full text-sm font-medium no-underline transition-all duration-200 ${
                       active
                         ? 'bg-[#3B2B8A] dark:bg-[#2D1F6E] text-white shadow-[0_2px_12px_rgba(109,74,255,0.35)]'
@@ -204,9 +271,8 @@ export default function Navbar() {
             })}
           </ul>
 
-          {/* ── RIGHT ACTIONS ── */}
+          {/* RIGHT ACTIONS */}
           <div className="flex items-center gap-2 shrink-0">
-            {/* Theme toggle */}
             <button
               onClick={toggleTheme}
               aria-label="Toggle theme"
@@ -215,7 +281,6 @@ export default function Navbar() {
               {isDark ? <Moon size={15} /> : <Sun size={15} />}
             </button>
 
-            {/* ── AUTH: Logged Out (ডাইনামিক) ── */}
             {!user && (
               <>
                 <Link
@@ -233,13 +298,11 @@ export default function Navbar() {
               </>
             )}
 
-            {/* ── AUTH: Logged In (ডাইনামিক) ── */}
             {user && (
               <div ref={userMenuRef} className="hidden lg:block relative">
                 <button
                   onClick={() => setUserMenuOpen((v) => !v)}
                   className="flex items-center gap-2.5 pl-1.5 pr-3 py-1.5 rounded-full border border-black/10 dark:border-white/10 bg-white/80 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 hover:border-black/20 dark:hover:border-white/16 shadow-sm dark:shadow-none transition-all duration-200 cursor-pointer"
-                  aria-expanded={userMenuOpen}
                 >
                   <Avatar user={user} size={28} />
                   <span className="text-sm font-semibold text-gray-800 dark:text-white max-w-[80px] truncate">
@@ -251,7 +314,6 @@ export default function Navbar() {
                   />
                 </button>
 
-                {/* Dropdown */}
                 <AnimatePresence>
                   {userMenuOpen && (
                     <motion.div
@@ -299,7 +361,6 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* ── MOBILE HAMBURGER ── */}
             <button
               onClick={() => setMobileOpen((v) => !v)}
               aria-label="Toggle menu"
@@ -322,9 +383,7 @@ export default function Navbar() {
         </nav>
       </motion.header>
 
-      {/* ═══════════════════════════════════════
-          MOBILE DRAWER
-       ═══════════════════════════════════════ */}
+      {/* MOBILE DRAWER */}
       <AnimatePresence>
         {mobileOpen && (
           <>
@@ -333,7 +392,6 @@ export default function Navbar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
               className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm lg:hidden"
               onClick={() => setMobileOpen(false)}
             />
@@ -346,7 +404,6 @@ export default function Navbar() {
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               className="fixed top-0 right-0 bottom-0 z-40 lg:hidden w-[min(300px,100vw)] flex flex-col bg-white dark:bg-[#08092A] border-l border-black/8 dark:border-white/8 shadow-[-16px_0_48px_rgba(0,0,0,0.1)] dark:shadow-[-16px_0_48px_rgba(0,0,0,0.6)] pt-[80px] pb-8"
             >
-              {/* Mobile Profile View */}
               {user && (
                 <div className="mx-4 mb-3 p-3.5 rounded-2xl border border-black/6 dark:border-white/8 bg-black/3 dark:bg-white/4 flex items-center gap-3">
                   <Avatar user={user} size={40} />
@@ -363,7 +420,7 @@ export default function Navbar() {
 
               <div className="flex flex-col gap-0.5 px-4 flex-1 overflow-y-auto">
                 {navLinks.map((link, i) => {
-                  const active = isActive(link.href);
+                  const active = isActive(link);
                   return (
                     <motion.div
                       key={link.label}
@@ -373,6 +430,7 @@ export default function Navbar() {
                     >
                       <Link
                         href={link.href}
+                        onClick={(e) => handleNavLinkClick(e, link)}
                         className={`flex items-center px-4 py-3 rounded-xl text-[15px] font-medium no-underline transition-all duration-150 ${
                           active
                             ? 'bg-[#3B2B8A]/12 dark:bg-[#2D1F6E]/40 text-[#6D4AFF] dark:text-white'
