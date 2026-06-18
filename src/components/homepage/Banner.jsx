@@ -2,7 +2,6 @@
 
 import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import {
   ArrowRight,
@@ -12,6 +11,14 @@ import {
   ShieldCheck,
   Headphones,
 } from 'lucide-react';
+
+// Swiper React components এবং modules ইম্পোর্ট
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, EffectFade } from 'swiper/modules';
+
+// Swiper styles ইম্পোর্ট
+import 'swiper/css';
+import 'swiper/css/effect-fade';
 
 const features = [
   {
@@ -36,7 +43,6 @@ export default function Banner() {
   const ref = useRef(null);
   const [mounted, setMounted] = useState(false);
 
-  // Hydration mismatch absolute bypass
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -48,7 +54,6 @@ export default function Banner() {
   const yText = useTransform(scrollYProgress, [0, 1], [0, 60]);
   const opacText = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
 
-  // Component mount হওয়ার আগে blank/fallback state রাখবে জাতে mismatch না হয়
   if (!mounted) return <div className="w-full min-h-screen bg-[#030712]" />;
 
   return (
@@ -127,7 +132,7 @@ export default function Banner() {
             >
               <Link
                 href="/browsebooks"
-                className="group flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 rounded-xl bg-linear-to-r from-amber-400 to-amber-500 text-slate-950 font-bold tracking-wide shadow-[0_10px_30px_rgba(245,158,11,0.2)] hover:shadow-[0_15px_35px_rgba(245,158,11,0.35)] hover:scale-[1.01] transition-all duration-300"
+                className="group flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-bold tracking-wide shadow-[0_10px_30px_rgba(245,158,11,0.2)] hover:shadow-[0_15px_35px_rgba(245,158,11,0.35)] hover:scale-[1.01] transition-all duration-300"
               >
                 Explore Collection
                 <ArrowRight
@@ -138,7 +143,7 @@ export default function Banner() {
 
               <Link
                 href="/how-it-works"
-                className="group flex items-center justify-center gap-3 w-full sm:w-auto px-7 py-4 rounded-xl border border-white/10 bg-white/3 text-white font-semibold tracking-wide backdrop-blur-md hover:bg-white/[0.07] hover:border-white/20 transition-all duration-300"
+                className="group flex items-center justify-center gap-3 w-full sm:w-auto px-7 py-4 rounded-xl border border-white/10 bg-white/5 text-white font-semibold tracking-wide backdrop-blur-md hover:bg-white/[0.07] hover:border-white/20 transition-all duration-300"
               >
                 <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
                   <Play
@@ -151,7 +156,7 @@ export default function Banner() {
             </motion.div>
           </motion.div>
 
-          {/* RIGHT COLUMN: Visual Frame with Image */}
+          {/* RIGHT COLUMN: Swiper Visual Frame with Updated Image Order */}
           <motion.div
             className="lg:col-span-5 relative w-full h-[400px] sm:h-[480px] lg:h-[520px] flex items-center justify-center"
             initial={{ opacity: 0, scale: 0.96, x: 20 }}
@@ -160,19 +165,40 @@ export default function Banner() {
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-amber-500/10 blur-3xl rounded-3xl pointer-events-none" />
 
-            <div className="relative w-full h-full max-w-md lg:max-w-full overflow-hidden rounded-2xl border border-white/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] group bg-slate-900">
-              <Image
-                src="https://images.unsplash.com/photo-1513001900722-370f803f498d?q=80&w=687&auto=format&fit=crop"
-                alt="Aesthetic Luxury Library Collection"
-                fill
-                priority
-                className="object-cover filter brightness-[0.88] contrast-[1.03] scale-100 group-hover:scale-[1.03] transition-transform duration-700 ease-out"
-                sizes="(max-w-1024px) 100vw, 450px"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-transparent to-black/20 pointer-events-none" />
-              <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#030712]/40 to-transparent pointer-events-none" />
+            <div className="relative w-full h-full max-w-md lg:max-w-full overflow-hidden rounded-2xl border border-white/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] group bg-slate-900 select-none">
+              <Swiper
+                modules={[Autoplay, EffectFade]}
+                effect={'fade'}
+                fadeEffect={{ crossFade: true }}
+                autoplay={{
+                  delay: 2500,
+                  disableOnInteraction: false,
+                }}
+                className="w-full h-full"
+              >
+                {[
+                  'https://images.unsplash.com/photo-1513001900722-370f803f498d?w=600&auto=format&fit=crop&q=60',
+                  'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=600&auto=format&fit=crop&q=60',
+                  'https://images.unsplash.com/photo-1604866830893-c13cafa515d5?w=600&auto=format&fit=crop&q=60',
+                  'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600&auto=format&fit=crop&q=60',
+                  'https://images.unsplash.com/photo-1517148892120-4d2da39c8dc1?w=600&auto=format&fit=crop&q=60',
+                ].map((src, index) => (
+                  <SwiperSlide key={index} className="w-full h-full relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={src}
+                      alt={`Aesthetic Luxury Library Collection ${index + 1}`}
+                      className="w-full h-full object-cover filter brightness-[0.85] contrast-[1.03] scale-100 group-hover:scale-[1.02] transition-transform duration-[4000ms] ease-out"
+                    />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
 
-              <div className="absolute bottom-6 left-6 right-6 p-5 rounded-xl border border-white/10 bg-slate-950/70 backdrop-blur-md opacity-90 shadow-xl pointer-events-none transform translate-y-0 group-hover:-translate-y-1 transition-transform duration-500">
+              {/* Overlays */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-transparent to-black/20 pointer-events-none z-10" />
+              <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#030712]/40 to-transparent pointer-events-none z-10" />
+
+              <div className="absolute bottom-6 left-6 right-6 p-5 rounded-xl border border-white/10 bg-slate-950/70 backdrop-blur-md opacity-90 shadow-xl pointer-events-none transform translate-y-0 group-hover:-translate-y-1 transition-transform duration-500 z-10">
                 <p className="text-xs font-bold text-amber-400 tracking-wider uppercase mb-1">
                   Curated Spaces
                 </p>
