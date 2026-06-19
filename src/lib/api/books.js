@@ -3,6 +3,7 @@ import { serverFetch } from '../core/server';
 
 const EMPTY_VALUES = new Set(['', 'All Categories', 'All', 'all', null, undefined]);
 
+// get all books 
 export const getBooks = async (params = {}) => {
   const cleanParams = {};
 

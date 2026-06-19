@@ -42,7 +42,7 @@ function Avatar({ user, size = 32 }) {
         alt={user.name || 'User'}
         width={size}
         height={size}
-        className="rounded-full object-cover ring-2 ring-[#6D4AFF]/40"
+        className="rounded-full object-cover aspect-square shrink-0 ring-2 ring-[#6D4AFF]/40"
       />
     );
   }
@@ -74,7 +74,7 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(true);
 
-  // হোমপেজের কোন সেকশনটি বর্তমানে স্ক্রিনে আছে তা ট্র্যাক করার স্টেট
+  // ─ Intersection Observer
   const [activeSection, setActiveSection] = useState('home');
 
   const userMenuRef = useRef(null);
@@ -101,7 +101,7 @@ export default function Navbar() {
 
     const observerOptions = {
       root: null,
-      rootMargin: '-40% 0px -40% 0px', 
+      rootMargin: '-30% 0px -50% 0px',
       threshold: 0,
     };
 
@@ -109,6 +109,8 @@ export default function Navbar() {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           setActiveSection(entry.target.id);
+        } else if (!entry.isIntersecting && activeSection === entry.target.id) {
+          setActiveSection('home');
         }
       });
     };
@@ -123,7 +125,6 @@ export default function Navbar() {
       if (el) observer.observe(el);
     });
 
-   
     const handleScrollTop = () => {
       if (window.scrollY < 120) {
         setActiveSection('home');
@@ -135,7 +136,7 @@ export default function Navbar() {
       observer.disconnect();
       window.removeEventListener('scroll', handleScrollTop);
     };
-  }, [pathname]);
+  }, [pathname, activeSection]);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -169,7 +170,7 @@ export default function Navbar() {
         const elem = document.getElementById(targetId);
         if (elem) {
           elem.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          setActiveSection(targetId); 
+          setActiveSection(targetId);
         }
       }
     }
@@ -185,7 +186,6 @@ export default function Navbar() {
       return false;
     }
 
-    
     if (link.isScroll) return false;
     return link.href === '/'
       ? pathname === '/'
@@ -331,6 +331,11 @@ export default function Navbar() {
                           </p>
                           <p className="text-[11px] text-gray-500 dark:text-[#B8B8C5] truncate m-0">
                             {user.email}
+                          </p>
+                          <p className="text-[10px] mt-1 m-0">
+                            <span className="inline-flex items-center px-2 py-0.5 font-bold uppercase tracking-wider rounded-md bg-[#6C47FF]/15 text-[#A78BFA] border border-[#6C47FF]/20 dark:bg-[#6C47FF]/20 dark:text-[#C5C9E0] dark:border-[#6C47FF]/30">
+                              {user.role}
+                            </span>
                           </p>
                         </div>
                       </div>

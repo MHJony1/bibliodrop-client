@@ -71,7 +71,7 @@ export default function BookCard({ book, index = 0 }) {
           className="relative rounded-2xl overflow-hidden flex flex-col h-full bg-[#0D1033] border border-white/[0.07] hover:border-[#6C47FF]/50 hover:shadow-[0_0_40px_-8px_rgba(108,71,255,0.35)] transition-all duration-300 ease-out"
         >
           {/* Spine accent bar */}
-          <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#6C47FF] via-[#9B7AFF] to-[#6C47FF]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 rounded-l-2xl" />
+          <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-linear-to-b from-[#6C47FF] via-[#9B7AFF] to-[#6C47FF]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 rounded-l-2xl" />
 
           {/* Cover Image */}
           <div className="relative w-full aspect-square overflow-hidden bg-[#080C24]">
@@ -86,7 +86,7 @@ export default function BookCard({ book, index = 0 }) {
               className="object-cover object-center transition-transform duration-500 ease-out group-hover:scale-105"
             />
 
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0D1033] via-[#0D1033]/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-linear-to-t from-[#0D1033] via-[#0D1033]/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
 
             {/* Category badge */}
             <motion.div
