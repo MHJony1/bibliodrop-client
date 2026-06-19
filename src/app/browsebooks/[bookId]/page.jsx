@@ -158,6 +158,7 @@ export default async function BookDetailsPage({ params }) {
                 status={book?.status} 
                 currentUser={currentUser} 
                 isLibrarianOwner={isLibrarianOwner}
+                book={book}
               />
             </div>
 
