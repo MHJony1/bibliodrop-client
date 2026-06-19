@@ -1,121 +1,252 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, SlidersHorizontal, X, ChevronDown } from 'lucide-react';
+import { Search, SlidersHorizontal, X } from 'lucide-react';
+
+const CATEGORIES = [
+  'All Categories', 'Fiction', 'Sci-Fi', 'Academic',
+  'Romance', 'Mystery', 'Biography', 'History', 'Self-Help',
+];
+
+const SORT_OPTIONS = [
+  { value: 'createdAt-desc', label: 'Newest First' },
+  { value: 'createdAt-asc',  label: 'Oldest First' },
+  { value: 'price-asc',      label: 'Price: Low → High' },
+  { value: 'price-desc',     label: 'Price: High → Low' },
+  { value: 'title-asc',      label: 'Title: A → Z' },
+  { value: 'title-desc',     label: 'Title: Z → A' },
+];
+
+function getFiltersFromParams(searchParams) {
+  const sort  = searchParams.get('sort')  || 'createdAt';
+  const order = searchParams.get('order') || 'desc';
+  const avail = searchParams.get('availability') || '';
+
+  return {
+    search:       searchParams.get('search')    || '',
+    category:     searchParams.get('category')  || 'All Categories',
+    minPrice:     searchParams.get('minPrice')  || '',
+    maxPrice:     searchParams.get('maxPrice')  || '',
+    availability: avail === 'available'   ? 'Available Only'
+                : avail === 'checked_out' ? 'Checked Out'
+                : 'All',
+    sortSelect:   `${sort}-${order}`,
+  };
+}
+
+function buildQueryString(filters) {
+  const params = new URLSearchParams();
+
+  if (filters.search) params.set('search', filters.search);
+
+  // ✅ category value DB field অনুযায়ী: "category"
+  if (filters.category !== 'All Categories') {
+    params.set('category', filters.category.toLowerCase());
+  }
+
+  if (filters.minPrice) params.set('minPrice', filters.minPrice);
+  if (filters.maxPrice) params.set('maxPrice', filters.maxPrice);
+
+  // ✅ availability value DB field অনুযায়ী: "available" বা "checked_out"
+  if (filters.availability === 'Available Only') params.set('availability', 'available');
+  if (filters.availability === 'Checked Out')    params.set('availability', 'checked_out');
+
+  const [sort, order] = filters.sortSelect.split('-');
+  params.set('sort', sort);
+  params.set('order', order);
+  params.set('page', '1');
+
+  return params.toString();
+}
 
 export default function FilterBar() {
+  const router       = useRouter();
+  const searchParams = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters]         = useState(() => getFiltersFromParams(searchParams));
+  const [searchInput, setSearchInput] = useState(filters.search);
+  const debounceRef  = useRef(null);
+  const filtersRef   = useRef(filters);
 
-  // ক্যাটাগরি লিস্ট (আপনার ইমেজ 'image_917486.jpg' এর উপর ভিত্তি করে)
-  const categories = ['All Categories', 'Fiction', 'Sci-Fi', 'Academic', 'Romance', 'Mystery', 'Biography', 'History', 'Self-Help'];
-  const availabilities = ['All', 'Available Only', 'Checked Out'];
+  useEffect(() => { filtersRef.current = filters; }, [filters]);
+
+  useEffect(() => {
+    const synced = getFiltersFromParams(searchParams);
+    setFilters(synced);
+    setSearchInput(synced.search);
+  }, [searchParams]);
+
+  const pushRoute = (updatedFilters) => {
+    const qs = buildQueryString(updatedFilters);
+    router.push(`/browsebooks${qs ? `?${qs}` : ''}`, { scroll: false });
+  };
+
+  // Search debounce
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      const updated = { ...filtersRef.current, search: searchInput };
+      setFilters(updated);
+      pushRoute(updated);
+    }, 500);
+    return () => clearTimeout(debounceRef.current);
+  }, [searchInput]); // eslint-disable-line
+
+  const handleChange = (key, value) => {
+    const updated = { ...filtersRef.current, [key]: value };
+    setFilters(updated);
+    pushRoute(updated);
+  };
+
+  const handleClearAll = () => {
+    const reset = {
+      search: '', category: 'All Categories',
+      minPrice: '', maxPrice: '', availability: 'All', sortSelect: 'createdAt-desc',
+    };
+    setFilters(reset);
+    setSearchInput('');
+    router.push('/browsebooks', { scroll: false });
+  };
+
+  const activeCount = [
+    filters.search,
+    filters.category !== 'All Categories' && filters.category,
+    filters.minPrice,
+    filters.maxPrice,
+    filters.availability !== 'All' && filters.availability,
+  ].filter(Boolean).length;
+
+  const selectStyle = {
+    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238890B5' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 12px center',
+  };
 
   return (
-    <div className="w-full space-y-4 mb-10">
-      
-      {/* Top Search & Filter Trigger Row */}
-      <div className="flex flex-col sm:flex-row items-center gap-3">
-        {/* Search Input Box */}
-        <div className="w-full relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
+    <div className="w-full space-y-3">
+
+      {/* Top Row */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1 relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#565C8A] pointer-events-none" size={15} />
           <input
             type="text"
-            placeholder="Search by title or author..."
-            className="w-full pl-11 pr-4 py-3.5 rounded-xl border border-white/10 bg-[#0D1035]/60 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#6D4AFF] focus:ring-1 focus:ring-[#6D4AFF] shadow-inner transition-all"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                if (debounceRef.current) clearTimeout(debounceRef.current);
+                const updated = { ...filtersRef.current, search: searchInput };
+                setFilters(updated);
+                pushRoute(updated);
+              }
+            }}
+            placeholder="Search by title or author and press Enter..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/[0.07] bg-[#0D1033]/80
+              text-white text-sm placeholder-[#565C8A] focus:outline-none focus:border-[#6C47FF]/60 transition-colors"
           />
+          {searchInput && (
+            <button onClick={() => setSearchInput('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#565C8A] hover:text-white transition-colors">
+              <X size={13} />
+            </button>
+          )}
         </div>
 
-        {/* Sort Select Box */}
-        <div className="w-full sm:w-[180px] relative">
-          <select className="w-full pl-4 pr-10 py-3.5 rounded-xl border border-white/10 bg-[#0D1035]/60 text-sm text-white focus:outline-none focus:border-[#6D4AFF] appearance-none cursor-pointer font-medium">
-            <option>Newest First</option>
-            <option>Price: Low → High</option>
-            <option>Price: High → Low</option>
-          </select>
-          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={16} />
-        </div>
-
-        {/* Filter Toggle Button */}
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className={`w-full sm:w-auto px-5 py-3.5 rounded-xl border text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-            showFilters 
-              ? 'bg-[#6D4AFF] border-[#6D4AFF] text-white shadow-[0_0_25px_rgba(109,74,255,0.45)]' 
-              : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:border-white/20'
-          }`}
+        <select
+          value={filters.sortSelect}
+          onChange={(e) => handleChange('sortSelect', e.target.value)}
+          className="sm:w-[180px] px-4 py-2.5 rounded-xl border border-white/[0.07] bg-[#0D1033]/80
+            text-white text-sm focus:outline-none focus:border-[#6C47FF]/60 cursor-pointer appearance-none"
+          style={selectStyle}
         >
-          <SlidersHorizontal size={15} />
+          {SORT_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value} className="bg-[#0D1033]">{opt.label}</option>
+          ))}
+        </select>
+
+        <button
+          onClick={() => setShowFilters(p => !p)}
+          className={`px-4 py-2.5 rounded-xl border text-sm font-bold flex items-center justify-center gap-2 transition-all
+            ${showFilters ? 'bg-[#6C47FF] border-[#6C47FF] text-white' : 'bg-[#0D1033]/80 border-white/[0.07] text-[#C5C9E0] hover:border-white/20'}`}
+        >
+          <SlidersHorizontal size={13} />
           Filters
+          {activeCount > 0 && (
+            <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-black
+              ${showFilters ? 'bg-white text-[#6C47FF]' : 'bg-[#6C47FF] text-white'}`}>
+              {activeCount}
+            </span>
+          )}
         </button>
       </div>
 
-      {/* Expandable Filter Options Panel */}
+      {/* Advanced Filters Panel */}
       <AnimatePresence>
         {showFilters && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="w-full rounded-2xl border border-white/10 bg-[#0D1035]/80 backdrop-blur-md overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.4)]"
-          >
-            <div className="p-6 space-y-6">
-              {/* Filter Panel Header */}
-              <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                <span className="text-sm font-bold text-white tracking-wide uppercase">Filter Options</span>
-                <button className="text-xs font-semibold text-gray-400 hover:text-red-400 flex items-center gap-1 bg-transparent border-none cursor-pointer transition-colors">
-                  <X size={13} /> Clear All
+          <motion.div key="filter-panel"
+            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="overflow-hidden">
+            <div className="rounded-xl border border-white/[0.07] bg-[#0D1033]/80 backdrop-blur-md p-4">
+              <div className="flex justify-between items-center mb-4 pb-3 border-b border-white/[0.05]">
+                <span className="text-[10px] font-bold text-[#8890B5] uppercase tracking-widest">Advanced Filters</span>
+                <button onClick={handleClearAll}
+                  className="text-[10px] text-[#8890B5] hover:text-red-400 flex items-center gap-1 transition-colors font-medium">
+                  <X size={10} /> Clear All
                 </button>
               </div>
 
-              {/* Filter Fields Responsive Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {/* 1. Category Field */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#B8B8C5] block">Category</label>
-                  <div className="relative">
-                    <select className="w-full pl-4 pr-10 py-3 rounded-xl border border-white/5 bg-[#05081F] text-sm text-white focus:outline-none focus:border-[#6D4AFF] appearance-none cursor-pointer">
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat.toLowerCase()}>{cat}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={14} />
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+
+                {/* Category */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-[#8890B5] uppercase tracking-wider">Category</label>
+                  <select value={filters.category} onChange={(e) => handleChange('category', e.target.value)}
+                    className="px-3 py-2 rounded-lg border border-white/[0.05] bg-[#070B1E] text-white text-sm
+                      focus:outline-none focus:border-[#6C47FF]/60 cursor-pointer appearance-none"
+                    style={{ ...selectStyle, backgroundPosition: 'right 10px center' }}>
+                    {CATEGORIES.map(cat => (
+                      <option key={cat} value={cat} className="bg-[#070B1E]">{cat}</option>
+                    ))}
+                  </select>
                 </div>
 
-                {/* 2. Min Delivery Fee Field */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#B8B8C5] block">Min Delivery Fee ($)</label>
-                  <input
-                    type="number"
+                {/* Min Price */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-[#8890B5] uppercase tracking-wider">Min Price ($)</label>
+                  <input type="number" min="0" value={filters.minPrice}
+                    onChange={(e) => handleChange('minPrice', e.target.value)}
                     placeholder="0"
-                    className="w-full px-4 py-3 rounded-xl border border-white/5 bg-[#05081F] text-sm text-white focus:outline-none focus:border-[#6D4AFF] placeholder-gray-700"
-                  />
+                    className="px-3 py-2 rounded-lg border border-white/[0.05] bg-[#070B1E] text-white text-sm
+                      focus:outline-none focus:border-[#6C47FF]/60 placeholder-[#3A3F5C]" />
                 </div>
 
-                {/* 3. Max Delivery Fee Field */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#B8B8C5] block">Max Delivery Fee ($)</label>
-                  <input
-                    type="number"
-                    placeholder="50"
-                    className="w-full px-4 py-3 rounded-xl border border-white/5 bg-[#05081F] text-sm text-white focus:outline-none focus:border-[#6D4AFF] placeholder-gray-700"
-                  />
+                {/* Max Price */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-[#8890B5] uppercase tracking-wider">Max Price ($)</label>
+                  <input type="number" min="0" value={filters.maxPrice}
+                    onChange={(e) => handleChange('maxPrice', e.target.value)}
+                    placeholder="Any"
+                    className="px-3 py-2 rounded-lg border border-white/[0.05] bg-[#070B1E] text-white text-sm
+                      focus:outline-none focus:border-[#6C47FF]/60 placeholder-[#3A3F5C]" />
                 </div>
 
-                {/* 4. Availability Field */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-[#B8B8C5] block">Availability</label>
-                  <div className="relative">
-                    <select className="w-full pl-4 pr-10 py-3 rounded-xl border border-white/5 bg-[#05081F] text-sm text-white focus:outline-none focus:border-[#6D4AFF] appearance-none cursor-pointer">
-                      {availabilities.map((avail) => (
-                        <option key={avail} value={avail}>{avail}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" size={14} />
-                  </div>
+                {/* Availability */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-[#8890B5] uppercase tracking-wider">Availability</label>
+                  <select value={filters.availability} onChange={(e) => handleChange('availability', e.target.value)}
+                    className="px-3 py-2 rounded-lg border border-white/[0.05] bg-[#070B1E] text-white text-sm
+                      focus:outline-none focus:border-[#6C47FF]/60 cursor-pointer appearance-none"
+                    style={{ ...selectStyle, backgroundPosition: 'right 10px center' }}>
+                    <option value="All" className="bg-[#070B1E]">All Books</option>
+                    <option value="Available Only" className="bg-[#070B1E]">Available Only</option>
+                    <option value="Checked Out" className="bg-[#070B1E]">Checked Out</option>
+                  </select>
                 </div>
+
               </div>
             </div>
           </motion.div>

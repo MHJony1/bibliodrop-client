@@ -12,7 +12,7 @@ export default function Home() {
   return (
     <>
       <Banner />
-      {/* <FeaturedBooks /> */}
+      <FeaturedBooks />
 
       <section id="how-it-works">
         <HowItWorks />
@@ -20,9 +20,9 @@ export default function Home() {
 
       <StatsSection />
 
-      {/* <section id="categories">
+      <section id="categories">
         <PopularCategories />
-      </section> */}
+      </section>
 
       <FeaturedLibrarians />
       <WhyChooseUs />
