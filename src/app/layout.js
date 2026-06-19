@@ -4,6 +4,7 @@ import Navbar from "@/components/homepage/shared/Navbar";
 import Footer from "@/components/homepage/shared/Footer";
 import { Toaster } from "react-hot-toast";
 
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -27,7 +28,7 @@ export default function RootLayout({ children }) {
     >
       <body className="flex flex-col min-h-screen font-sans relative">
         <Navbar />
-        <main className="flex-1 relative z-10">
+        <main className="flex-1 relative z-10">        
           {children}
         </main>
         <Footer />

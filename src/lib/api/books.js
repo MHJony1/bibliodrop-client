@@ -18,7 +18,18 @@ export const getBooks = async (params = {}) => {
   return serverFetch(url);
 };
 
+// get book by id for single book details
 export const getBookById = async (bookId) => {
-  if (!bookId) return null;
-  return serverFetch(`/api/books/${bookId}`);
+  if (!bookId) {
+    console.warn('⚠️ No bookId provided');
+    return null;
+  }
+  
+  try {
+    const response = await serverFetch(`/api/books/${bookId}`);
+    return response;
+  } catch (error) {
+    console.error('❌ Error fetching book by ID:', error);
+    throw error;
+  }
 };

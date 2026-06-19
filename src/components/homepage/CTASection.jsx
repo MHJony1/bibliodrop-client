@@ -10,15 +10,15 @@ export default function CTASection() {
   return (
     <section className="w-full py-16 px-4 sm:px-6 lg:px-8 bg-[#05081F] overflow-hidden relative">
       {/* Background Subtle Glows */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[250px] bg-[#6D4AFF]/15 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-125 h-62.5 bg-[#6D4AFF]/15 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="max-w-[1140px] mx-auto relative z-10">
+      <div className="max-w-285 mx-auto relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="w-full rounded-3xl border border-white/10 bg-gradient-to-br from-[#0D1035] via-[#08092A] to-[#05081F] relative overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.5)] p-8 sm:p-12 lg:p-16 flex flex-col lg:flex-row items-center justify-between gap-10 group"
+          className="w-full rounded-3xl border border-white/10 bg-linear-to-br from-[#0D1035] via-[#08092A] to-[#05081F] relative overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.5)] p-8 sm:p-12 lg:p-16 flex flex-col lg:flex-row items-center justify-between gap-10 group"
         >
           {/* Right Side Background Image Overlay inside the card */}
           <div className="absolute right-0 top-0 bottom-0 w-full lg:w-1/2 h-full opacity-10 lg:opacity-20 pointer-events-none mix-blend-luminosity group-hover:scale-105 transition-transform duration-700 ease-out">
@@ -31,7 +31,7 @@ export default function CTASection() {
           </div>
 
           {/* Luxury Linear Gradient Mask for Image */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0D1035] via-[#0D1035]/90 to-transparent pointer-events-none hidden lg:block" />
+          <div className="absolute inset-0 bg-linear-to-r from-[#0D1035] via-[#0D1035]/90 to-transparent pointer-events-none hidden lg:block" />
 
           {/* LEFT CONTENT */}
           <div className="max-w-xl text-center lg:text-left relative z-10 space-y-5">
@@ -42,7 +42,7 @@ export default function CTASection() {
 
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white m-0 leading-tight">
               Ready to Start Your Next <br className="hidden sm:inline" />
-              <span className="bg-gradient-to-r from-[#6D4AFF] via-[#8B5CF6] to-[#FFD04D] bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-[#6D4AFF] via-[#8B5CF6] to-[#FFD04D] bg-clip-text text-transparent">
                 Literary Journey?
               </span>
             </h2>

@@ -12,21 +12,27 @@ export default function Home() {
   return (
     <>
       <Banner />
+
+      <StatsSection />
+
       <FeaturedBooks />
 
       <section id="how-it-works">
         <HowItWorks />
       </section>
 
-      <StatsSection />
+      
 
       <section id="categories">
         <PopularCategories />
       </section>
 
       <FeaturedLibrarians />
+
       <WhyChooseUs />
+
       <PeopleSay />
+      
       <CTASection />
     </>
   );

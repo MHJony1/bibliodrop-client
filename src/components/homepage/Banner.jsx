@@ -12,11 +12,11 @@ import {
   Headphones,
 } from 'lucide-react';
 
-// Swiper React components এবং modules ইম্পোর্ট
+// Swiper React components এবং modules imports
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, EffectFade } from 'swiper/modules';
 
-// Swiper styles ইম্পোর্ট
+// Swiper styles 
 import 'swiper/css';
 import 'swiper/css/effect-fade';
 
@@ -59,12 +59,12 @@ export default function Banner() {
   return (
     <section
       ref={ref}
-      className="relative w-full overflow-hidden bg-[#030712] border-b border-white/[0.03]"
+      className="relative w-full overflow-hidden bg-[#030712] border-b border-white/3"
       style={{ minHeight: 'calc(100vh - 80px)' }}
     >
       {/* Ambient Premium Lighting Setup */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(17,24,39,1)_0%,rgba(3,7,18,1)_75%)] pointer-events-none" />
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-indigo-500/[0.03] rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-125 h-125 bg-indigo-500/3 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Decorative Dot Grid */}
       <div
@@ -87,7 +87,7 @@ export default function Banner() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/[0.05] px-4 py-1.5 backdrop-blur-md"
+              className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-4 py-1.5 backdrop-blur-md"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
               <span className="text-xs font-semibold uppercase tracking-widest text-amber-400/90">
@@ -103,7 +103,7 @@ export default function Banner() {
             >
               Your Favorite Books,
               <br />
-              <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-amber-200 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-amber-400 via-orange-400 to-amber-200 bg-clip-text text-transparent">
                 Delivered Luxury
               </span>{' '}
               to You.
@@ -132,7 +132,7 @@ export default function Banner() {
             >
               <Link
                 href="/browsebooks"
-                className="group flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-bold tracking-wide shadow-[0_10px_30px_rgba(245,158,11,0.2)] hover:shadow-[0_15px_35px_rgba(245,158,11,0.35)] hover:scale-[1.01] transition-all duration-300"
+                className="group flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 rounded-xl bg-linear-to-r from-amber-400 to-amber-500 text-slate-950 font-bold tracking-wide shadow-[0_10px_30px_rgba(245,158,11,0.2)] hover:shadow-[0_15px_35px_rgba(245,158,11,0.35)] hover:scale-[1.01] transition-all duration-300"
               >
                 Explore Collection
                 <ArrowRight
@@ -158,12 +158,12 @@ export default function Banner() {
 
           {/* RIGHT COLUMN: Swiper Visual Frame with Updated Image Order */}
           <motion.div
-            className="lg:col-span-5 relative w-full h-[400px] sm:h-[480px] lg:h-[520px] flex items-center justify-center"
+            className="lg:col-span-5 relative w-full h-100 sm:h-120 lg:h-130 flex items-center justify-center"
             initial={{ opacity: 0, scale: 0.96, x: 20 }}
             animate={{ opacity: 1, scale: 1, x: 0 }}
             transition={{ duration: 0.85, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/10 to-amber-500/10 blur-3xl rounded-3xl pointer-events-none" />
+            <div className="absolute inset-0 bg-linear-to-tr from-indigo-500/10 to-amber-500/10 blur-3xl rounded-3xl pointer-events-none" />
 
             <div className="relative w-full h-full max-w-md lg:max-w-full overflow-hidden rounded-2xl border border-white/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] group bg-slate-900 select-none">
               <Swiper
@@ -188,15 +188,15 @@ export default function Banner() {
                     <img
                       src={src}
                       alt={`Aesthetic Luxury Library Collection ${index + 1}`}
-                      className="w-full h-full object-cover filter brightness-[0.85] contrast-[1.03] scale-100 group-hover:scale-[1.02] transition-transform duration-[4000ms] ease-out"
+                      className="w-full h-full object-cover filter brightness-[0.85] contrast-[1.03] scale-100 group-hover:scale-[1.02] transition-transform duration-4000 ease-out"
                     />
                   </SwiperSlide>
                 ))}
               </Swiper>
 
               {/* Overlays */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#030712] via-transparent to-black/20 pointer-events-none z-10" />
-              <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#030712]/40 to-transparent pointer-events-none z-10" />
+              <div className="absolute inset-0 bg-linear-to-t from-[#030712] via-transparent to-black/20 pointer-events-none z-10" />
+              <div className="absolute inset-y-0 left-0 w-24 bg-linear-to-r from-[#030712]/40 to-transparent pointer-events-none z-10" />
 
               <div className="absolute bottom-6 left-6 right-6 p-5 rounded-xl border border-white/10 bg-slate-950/70 backdrop-blur-md opacity-90 shadow-xl pointer-events-none transform translate-y-0 group-hover:-translate-y-1 transition-transform duration-500 z-10">
                 <p className="text-xs font-bold text-amber-400 tracking-wider uppercase mb-1">
@@ -216,7 +216,7 @@ export default function Banner() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.7, duration: 0.5, type: 'spring' }}
             >
-              <div className="mb-1 w-8 h-8 rounded-full bg-gradient-to-r from-amber-400 to-amber-500 flex items-center justify-center shadow-md">
+              <div className="mb-1 w-8 h-8 rounded-full bg-linear-to-r from-amber-400 to-amber-500 flex items-center justify-center shadow-md">
                 <Truck size={14} className="text-slate-950" strokeWidth={2.5} />
               </div>
               <p className="text-[9px] font-semibold tracking-widest text-slate-400 uppercase">
@@ -232,16 +232,16 @@ export default function Banner() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 rounded-2xl border border-white/[0.05] bg-gradient-to-r from-white/[0.01] to-white/[0.03] backdrop-blur-xl overflow-hidden divide-y sm:divide-y-0 lg:divide-x divide-white/[0.05]"
+          className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 rounded-2xl border border-white/5 bg-linear-to-r from-white/1 to-white/3 backdrop-blur-xl overflow-hidden divide-y sm:divide-y-0 lg:divide-x divide-white/5"
         >
           {features.map((f) => {
             const Icon = f.icon;
             return (
               <div
                 key={f.title}
-                className="flex items-center gap-4 px-6 py-5 hover:bg-white/[0.01] transition-colors duration-300"
+                className="flex items-center gap-4 px-6 py-5 hover:bg-white/1 transition-colors duration-300"
               >
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                <div className="w-11 h-11 rounded-xl bg-linear-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
                   <Icon size={18} className="text-indigo-400" strokeWidth={2} />
                 </div>
                 <div>
