@@ -7,9 +7,14 @@ import {
   ArrowRight, ShieldCheck, RefreshCw, Truck 
 } from 'lucide-react';
 import { FaFacebookF, FaXTwitter, FaInstagram, FaLinkedinIn } from 'react-icons/fa6';
+import { usePathname } from 'next/navigation';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const pathname = usePathname();
+   if(pathname?.includes('dashboard')){
+    return null;
+  }
 
   const quickLinks = [
     { label: 'Home', href: '/' },

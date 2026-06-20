@@ -2,16 +2,14 @@ import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { auth } from '../auth';
 
-
-
 export const getUserSession = async () => {
   try {
     const requestHeaders = await headers();
-    
+
     const session = await auth.api.getSession({
       headers: requestHeaders,
     });
-    
+
     return session?.user || null;
   } catch (error) {
     console.error('Session retrieval error:', error);
@@ -34,20 +32,17 @@ export const getUserSession = async () => {
 
 
 
+
+
+
 // 3. specific role based  session get
-// export const requireRole = async (allowedRoles) => {
-//   const user = await getUserSession();
-
-//   if (!user) {
-//     redirect('/login'); 
-//   }
-
-//   // allowedRoles যদি অ্যারে হয় (যেমন: ['librarian', 'admin']) অথবা সিঙ্গেল স্ট্রিং হয়
-//   const rolesArray = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
-
-//   if (!rolesArray.includes(user?.role)) {
-//     redirect('/unauthorized'); 
-//   }
-
-//   return user;
-// };
+export const requireRole = async (role) => {
+  const user = await getUserSession();
+  if (!user) {
+    redirect('/auth/login');
+  }
+  if (user?.role?.toLowerCase() !== role.toLowerCase()) {
+    redirect('/unauthorized');
+  }
+  return user;
+};

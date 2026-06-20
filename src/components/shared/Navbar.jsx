@@ -75,8 +75,16 @@ export default function Navbar() {
 
   // ─ Intersection Observer
   const [activeSection, setActiveSection] = useState('home');
-
   const userMenuRef = useRef(null);
+
+  // Helper function to get the dynamic dashboard path based on role
+  const getDashboardPath = () => {
+    if (!user?.role) return '/dashboard/user';
+    const role = user.role.toLowerCase();
+    if (role === 'admin') return '/dashboard/admin';
+    if (role === 'librarian') return '/dashboard/librarian';
+    return '/dashboard/user';
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -151,6 +159,11 @@ export default function Navbar() {
     document.addEventListener('mousedown', fn);
     return () => document.removeEventListener('mousedown', fn);
   }, []);
+
+  // pathname wise navbar hide
+  if (pathname.includes('dashboard')) {
+    return null;
+  }
 
   const toggleTheme = () => {
     setIsDark((prev) => {
@@ -341,7 +354,7 @@ export default function Navbar() {
 
                       <div className="p-1.5">
                         <Link
-                          href="/dashboard"
+                          href={getDashboardPath()}
                           className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[13px] font-medium no-underline text-gray-700 dark:text-[#B8B8C5] hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/6 transition-all duration-150"
                         >
                           <LayoutDashboard
@@ -454,7 +467,7 @@ export default function Navbar() {
                     transition={{ delay: navLinks.length * 0.045 }}
                   >
                     <Link
-                      href="/dashboard"
+                      href={getDashboardPath()}
                       className="flex items-center gap-2.5 px-4 py-3 rounded-xl text-[15px] font-medium no-underline text-gray-700 dark:text-[#B8B8C5] hover:bg-black/5 dark:hover:bg-white/6 hover:text-gray-900 dark:hover:text-white transition-all duration-150"
                     >
                       <LayoutDashboard size={16} className="text-[#6D4AFF]" />
