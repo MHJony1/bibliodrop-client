@@ -1,54 +1,3 @@
-// import { NextResponse } from 'next/server'
-// import { headers } from 'next/headers'
-// import { auth } from '@/lib/auth'
-// import { stripe } from '@/lib/stripe'
-
-// export async function POST(request) {
-//   try {
-//     const headersList = await headers()
-//     const origin = headersList.get('origin')
-
-//      const userSession = await auth.api.getSession({
-//       headers: await headers(),
-//     });
-
-//     const user = userSession?.user;
-//     const formData = await request.formData();
-//     const price = formData.get('price')
-//     const title = formData.get('title')
-//     const bookId = formData.get('bookId')
-
-//     // Create Checkout Sessions from body params.
-//     const session = await stripe.checkout.sessions.create({
-//       customer_email: user?.email,
-//       line_items: [
-//         {
-//           // Provide the exact Price ID (for example, price_1234) of the product you want to sell
-//           price: '{{PRICE_ID}}',
-//           quantity: 1,
-//         },
-//       ],
-//       mode: 'payment',
-//       success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
-//     });
-//     return NextResponse.redirect(session.url, 303)
-//   } catch (err) {
-//     return NextResponse.json(
-//       { error: err.message },
-//       { status: err.statusCode || 500 }
-//     )
-//   }
-// }
-
-
-
-
-
-
-
-
-
-
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { auth } from '@/lib/auth';
@@ -71,7 +20,7 @@ export async function POST(request) {
     if (!title || !price) {
       return NextResponse.json(
         { error: 'Missing required parameters: title or price' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -91,7 +40,7 @@ export async function POST(request) {
         userId: user?.id || 'guest',
         price: Number(price),
         userEmail: user.email,
-        title,
+        bookTitle: title,
       },
       line_items: [
         {
@@ -114,7 +63,7 @@ export async function POST(request) {
     console.error('Stripe Session Error:', err);
     return NextResponse.json(
       { error: err.message || 'Internal Transaction Initialization Error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

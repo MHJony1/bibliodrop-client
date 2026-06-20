@@ -21,11 +21,8 @@ export default function Home() {
         <HowItWorks />
       </section>
 
-      
-
-      <section id="categories">
         <PopularCategories />
-      </section>
+     
 
       <FeaturedLibrarians />
 

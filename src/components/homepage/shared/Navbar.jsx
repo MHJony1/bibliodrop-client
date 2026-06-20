@@ -26,7 +26,6 @@ const navLinks = [
   { label: 'Home', href: '/' },
   { label: 'Browse Books', href: '/browsebooks' },
   { label: 'How It Works', href: '/#how-it-works', isScroll: true },
-  { label: 'Categories', href: '/#categories', isScroll: true },
   { label: 'About Us', href: '/aboutUs' },
   { label: 'Contact', href: '/#contact', isScroll: true },
 ];
