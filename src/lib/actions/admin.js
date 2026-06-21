@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { approveBook, adminDeleteBook, updateUserRole, deleteUser, getAllBooks, toggleBookStatus } from "@/lib/api/admin";
+import { approveBook, adminDeleteBook, updateUserRole, deleteUser, getAllBooks, toggleBookStatus, getAllTransactions, updateTransactionStatus } from "@/lib/api/admin";
 
 //1. approve book action (book-approvals)
 export const handleApproveBookAction = async (bookId) => {
@@ -90,6 +90,35 @@ export const handleToggleBookStatusAction = async (bookId, status) => {
     return { success: false, error: result?.message || "Failed to update status" };
   } catch (error) {
     console.error("Toggle Status Error:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+// 1. fetch all transactions
+export const fetchAllTransactionsAction = async () => {
+  try {
+    const result = await getAllTransactions();
+    if (result?.success) {
+      return { success: true, data: result.data };
+    }
+    return { success: false, error: result?.message || "Failed to fetch transactions" };
+  } catch (error) {
+    console.error("Fetch Transactions Error:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+// 2. update transaction status
+export const handleUpdateTransactionStatusAction = async (transactionId, status) => {
+  try {
+    const result = await updateTransactionStatus(transactionId, status);
+    if (result?.success) {
+      revalidatePath("/dashboard/admin/transactions");
+      return { success: true, message: result.message };
+    }
+    return { success: false, error: result?.message || "Failed to update status" };
+  } catch (error) {
+    console.error("Update Transaction Status Error:", error);
     return { success: false, error: error.message };
   }
 };

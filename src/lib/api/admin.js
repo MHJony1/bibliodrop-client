@@ -45,3 +45,18 @@ export const toggleBookStatus = async (bookId, status) => {
     "PATCH"
   );
 };
+
+//Transactions page
+// 1. get all transactions
+export const getAllTransactions = async () => {
+  return await serverFetch("/api/admin/transactions");
+};
+
+// 2. update transaction status
+export const updateTransactionStatus = async (transactionId, status) => {
+  return await serverMutation(
+    `/api/admin/transactions/${transactionId}/status`,
+    { status },
+    "PATCH"
+  );
+};
