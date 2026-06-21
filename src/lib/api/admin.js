@@ -1,43 +1,47 @@
 import { serverFetch, serverMutation } from "@/lib/core/server";
 
-
-// Fetch total metrics and category breakdown for the admin overview dashboard
-
+//admin overview
 export const getAdminOverview = async () => {
   return await serverFetch("/api/admin/overview");
 };
-
-
-// Fetch all book submissions that are currently pending system approval
- 
+//admin book approvals
 export const getPendingBooks = async () => {
   return await serverFetch("/api/admin/pending-books");
 };
 
-
- // Approve a specific book submission and publish it platform-wide
- 
+//admin actions
 export const approveBook = async (bookId) => {
   return await serverMutation(`/api/admin/books/${bookId}/approve`, {}, "PATCH");
 };
+//delete book
+export const adminDeleteBook = async (bookId) => {
+  return await serverMutation(`/api/admin/books/${bookId}`, {}, "DELETE");
+};
 
-
- // Fetch a complete list of all registered users on the platform
- 
+//admin manage users 
+//1. get all users
 export const getAllUsers = async () => {
   return await serverFetch("/api/admin/users");
 };
-
-
- // Update the access role of a specific user (e.g., admin, librarian)
- 
+//2. update user role
 export const updateUserRole = async (userId, role) => {
   return await serverMutation(`/api/admin/users/${userId}/role`, { role }, "PATCH");
 };
+//3. delete user
+export const deleteUser = async (userId) => {
+  return await serverMutation(`/api/admin/users/${userId}`, {}, "DELETE");
+};
 
-
- // Forcibly remove and permanently delete any book listing from the platform
- 
-export const adminDeleteBook = async (bookId) => {
-  return await serverMutation(`/api/admin/books/${bookId}`, {}, "DELETE");
+//admin manage books
+//1. get all books
+export const getAllBooks = async () => {
+  return await serverFetch("/api/admin/books");
+};
+//2. toggle book status
+export const toggleBookStatus = async (bookId, status) => {
+  return await serverMutation(
+    `/api/admin/books/${bookId}/toggle`,
+    { status },
+    "PATCH"
+  );
 };
