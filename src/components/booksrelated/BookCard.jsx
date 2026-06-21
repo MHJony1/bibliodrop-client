@@ -7,7 +7,7 @@ import { ArrowRight, BookOpen, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function BookCard({ book, index = 0 }) {
-  const isAvailable = book?.status === 'available';
+  const isAvailable = book?.status === 'Published';
   const bookId = book?._id?.toString() || book?._id;
 
   const categoryColors = {

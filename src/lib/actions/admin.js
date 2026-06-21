@@ -3,13 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { approveBook, adminDeleteBook, updateUserRole } from "@/lib/api/admin";
 
-/**
- * Handle server action for approving and publishing a pending book listing
- */
 export const handleApproveBookAction = async (bookId) => {
   try {
     const result = await approveBook(bookId);
     if (result?.success) {
+      revalidatePath("/dashboard/admin/book-approvals"); // ✅ Correct path
       revalidatePath("/dashboard/admin");
       return { success: true, message: result.message };
     }
@@ -20,13 +18,11 @@ export const handleApproveBookAction = async (bookId) => {
   }
 };
 
-/**
- * Handle server action for permanent deletion of a book by administration
- */
 export const handleAdminDeleteBookAction = async (bookId) => {
   try {
     const result = await adminDeleteBook(bookId);
     if (result?.success) {
+      revalidatePath("/dashboard/admin/book-approvals"); // ✅ Correct path
       revalidatePath("/dashboard/admin");
       return { success: true };
     }
@@ -37,9 +33,6 @@ export const handleAdminDeleteBookAction = async (bookId) => {
   }
 };
 
-/**
- * Handle server action for modifying a user's operational role status
- */
 export const handleUpdateUserRoleAction = async (userId, newRole) => {
   try {
     const result = await updateUserRole(userId, newRole);
