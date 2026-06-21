@@ -16,7 +16,7 @@ import {
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, EffectFade } from 'swiper/modules';
 
-// Swiper styles 
+// Swiper styles
 import 'swiper/css';
 import 'swiper/css/effect-fade';
 
@@ -51,20 +51,20 @@ export default function Banner() {
     target: ref,
     offset: ['start start', 'end start'],
   });
+
+  // Parallax এবং Fade এফেক্ট ট্র্যান্সফর্মেশন
   const yText = useTransform(scrollYProgress, [0, 1], [0, 60]);
   const opacText = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-
-  if (!mounted) return <div className="w-full min-h-screen bg-[#030712]" />;
 
   return (
     <section
       ref={ref}
-      className="relative w-full overflow-hidden bg-[#030712] border-b border-white/3"
+      className="relative w-full overflow-hidden bg-[#030712] border-b border-white/5"
       style={{ minHeight: 'calc(100vh - 80px)' }}
     >
       {/* Ambient Premium Lighting Setup */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(17,24,39,1)_0%,rgba(3,7,18,1)_75%)] pointer-events-none" />
-      <div className="absolute top-0 left-1/4 w-125 h-125 bg-indigo-500/3 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-125 h-125 bg-indigo-500/5 rounded-full blur-[120px] pointer-events-none" />
 
       {/* Decorative Dot Grid */}
       <div
@@ -81,7 +81,7 @@ export default function Banner() {
           {/* LEFT COLUMN: Content */}
           <motion.div
             className="lg:col-span-7 flex flex-col items-start max-w-2xl"
-            style={{ y: yText, opacity: opacText }}
+            style={{ y: mounted ? yText : 0, opacity: mounted ? opacText : 1 }}
           >
             <motion.div
               initial={{ opacity: 0, y: 15 }}
@@ -156,7 +156,7 @@ export default function Banner() {
             </motion.div>
           </motion.div>
 
-          {/* RIGHT COLUMN: Swiper Visual Frame with Updated Image Order */}
+          {/* RIGHT COLUMN: Swiper Visual Frame */}
           <motion.div
             className="lg:col-span-5 relative w-full h-100 sm:h-120 lg:h-130 flex items-center justify-center"
             initial={{ opacity: 0, scale: 0.96, x: 20 }}
@@ -166,33 +166,37 @@ export default function Banner() {
             <div className="absolute inset-0 bg-linear-to-tr from-indigo-500/10 to-amber-500/10 blur-3xl rounded-3xl pointer-events-none" />
 
             <div className="relative w-full h-full max-w-md lg:max-w-full overflow-hidden rounded-2xl border border-white/10 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] group bg-slate-900 select-none">
-              <Swiper
-                modules={[Autoplay, EffectFade]}
-                effect={'fade'}
-                fadeEffect={{ crossFade: true }}
-                autoplay={{
-                  delay: 2500,
-                  disableOnInteraction: false,
-                }}
-                className="w-full h-full"
-              >
-                {[
-                  'https://images.unsplash.com/photo-1513001900722-370f803f498d?w=600&auto=format&fit=crop&q=60',
-                  'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=600&auto=format&fit=crop&q=60',
-                  'https://images.unsplash.com/photo-1604866830893-c13cafa515d5?w=600&auto=format&fit=crop&q=60',
-                  'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600&auto=format&fit=crop&q=60',
-                  'https://images.unsplash.com/photo-1517148892120-4d2da39c8dc1?w=600&auto=format&fit=crop&q=60',
-                ].map((src, index) => (
-                  <SwiperSlide key={index} className="w-full h-full relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={src}
-                      alt={`Aesthetic Luxury Library Collection ${index + 1}`}
-                      className="w-full h-full object-cover filter brightness-[0.85] contrast-[1.03] scale-100 group-hover:scale-[1.02] transition-transform duration-4000 ease-out"
-                    />
-                  </SwiperSlide>
-                ))}
-              </Swiper>
+              {mounted ? (
+                <Swiper
+                  modules={[Autoplay, EffectFade]}
+                  effect={'fade'}
+                  fadeEffect={{ crossFade: true }}
+                  autoplay={{
+                    delay: 2500,
+                    disableOnInteraction: false,
+                  }}
+                  className="w-full h-full"
+                >
+                  {[
+                    'https://images.unsplash.com/photo-1513001900722-370f803f498d?w=600&auto=format&fit=crop&q=60',
+                    'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=600&auto=format&fit=crop&q=60',
+                    'https://images.unsplash.com/photo-1604866830893-c13cafa515d5?w=600&auto=format&fit=crop&q=60',
+                    'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600&auto=format&fit=crop&q=60',
+                    'https://images.unsplash.com/photo-1517148892120-4d2da39c8dc1?w=600&auto=format&fit=crop&q=60',
+                  ].map((src, index) => (
+                    <SwiperSlide key={index} className="w-full h-full relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={src}
+                        alt={`Aesthetic Luxury Library Collection ${index + 1}`}
+                        className="w-full h-full object-cover filter brightness-[0.85] contrast-[1.03] scale-100 group-hover:scale-[1.02] transition-transform duration-4000 ease-out"
+                      />
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+              ) : (
+                <div className="w-full h-full bg-slate-950 animate-pulse" />
+              )}
 
               {/* Overlays */}
               <div className="absolute inset-0 bg-linear-to-t from-[#030712] via-transparent to-black/20 pointer-events-none z-10" />

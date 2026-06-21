@@ -1,9 +1,8 @@
-import { serverFetch } from '../core/server';
-
+import { serverFetch, serverMutation } from '../core/server';
 
 const EMPTY_VALUES = new Set(['', 'All Categories', 'All', 'all', null, undefined]);
 
-// get all books 
+// GET: Fetch all books with filters
 export const getBooks = async (params = {}) => {
   const cleanParams = {};
 
@@ -19,7 +18,7 @@ export const getBooks = async (params = {}) => {
   return serverFetch(url);
 };
 
-// get book by id for single book details
+// GET: Fetch a single book by its ID
 export const getBookById = async (bookId) => {
   if (!bookId) {
     console.warn('⚠️ No bookId provided');
@@ -33,4 +32,45 @@ export const getBookById = async (bookId) => {
     console.error('❌ Error fetching book by ID:', error);
     throw error;
   }
+};
+
+// GET: Librarian specific books fetch
+export const getLibrarianBooks = async (librarianEmail) => {
+  if (!librarianEmail) return null;
+  return serverFetch(`/api/librarian/books?librarianEmail=${encodeURIComponent(librarianEmail)}`);
+};
+
+export const getLibrarianOrders = async (librarianEmail) => {
+  if (!librarianEmail) return null;
+  return serverFetch(`/api/librarian/orders?librarianEmail=${encodeURIComponent(librarianEmail)}`);
+};
+
+export const updateOrderStatus = async (orderId, status) => {
+  return serverMutation(`/api/orders/${orderId}/status`, { status }, 'PATCH');
+};
+
+// POST: Create a new book entry using the standard serverFetch helper
+export const createBook = async (bookData) => {
+  try {
+    const response = await serverMutation('/api/books', bookData, 'POST'); 
+    return response;
+  } catch (error) {
+    console.error("API Error in createBook:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateBook = async (bookId, bookData) => {
+  return serverMutation(`/api/books/${bookId}`, bookData, 'PATCH');
+};
+
+
+// DELETE: Book delete
+export const deleteBook = async (bookId) => {
+  return serverMutation(`/api/books/${bookId}`, {}, 'DELETE');
+};
+
+// PATCH: Book status toggle
+export const updateBookStatus = async (bookId, status) => {
+  return serverMutation(`/api/books/${bookId}/status`, { status }, 'PATCH');
 };

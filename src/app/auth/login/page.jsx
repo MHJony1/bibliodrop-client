@@ -33,20 +33,26 @@ const LogInPage = () => {
   const [loading, setLoading] = useState(false);
 
   // ─── 2. ROLE-BASED REDIRECTION FUNCTION (DECLARED FIRST) ───
-  const handleRoleBasedRedirection = useCallback((user) => {
-    if (!user) return;
+  const handleRoleBasedRedirection = useCallback(
+    (user) => {
+      if (!user) return;
 
-    const userRole = user.role?.toLowerCase();
+      const userRole = user.role?.trim().toLowerCase();
 
-    if (userRole === 'librarian' || userRole === 'admin') {
-      toast.success('Welcome to Management Dashboard! 🛡️');
-      router.push('/dashboard');
-    } else {
-      toast.success('Welcome back! Logged in successfully. 👋');
-      router.push(redirectTo);
-    }
-    router.refresh();
-  }, [router, redirectTo]);
+      if (userRole === 'admin') {
+        toast.success('Welcome to Admin Workspace! 🛡️');
+        router.push('/dashboard/admin');
+      } else if (userRole === 'librarian') {
+        toast.success('Welcome to Librarian Portal! 📚');
+        router.push('/dashboard/librarian');
+      } else {
+        toast.success('Welcome back! Logged in successfully. 👋');
+        router.push(redirectTo || '/');
+      }
+      router.refresh();
+    },
+    [router, redirectTo],
+  );
 
   // ─── 3. USEEFFECT FOR AUTO REDIRECT ───
   useEffect(() => {
@@ -252,10 +258,22 @@ const LogInPage = () => {
             className="w-full h-11 rounded-xl bg-[#05081F] border border-white/10 hover:bg-white/5 text-gray-300 hover:text-white font-semibold text-xs transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-3 cursor-pointer"
           >
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-              <path fill="#EA4335" d="M12 5.04c1.64 0 3.12.56 4.28 1.67l3.2-3.2C17.52 1.58 14.92 1 12 1 7.35 1 3.37 3.68 1.44 7.6l3.86 3A6.98 6.98 0 0 1 12 5.04z" />
-              <path fill="#4285F4" d="M23.49 12.27c0-.82-.07-1.6-.2-2.36H12v4.51h6.44a5.5 5.5 0 0 1-2.39 3.62l3.71 2.88c2.17-2 3.43-4.94 3.43-8.65z" />
-              <path fill="#FBBC05" d="M5.3 14.4a6.93 6.93 0 0 1 0-4.8l-3.86-3A11.95 11.95 0 0 0 1 12c0 1.92.45 3.74 1.25 5.37l4.05-3.17z" />
-              <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.92l-3.71-2.88c-1.1.74-2.5 1.18-4.25 1.18-3.23 0-5.97-2.18-6.95-5.11l-3.96 3.07A11.97 11.97 0 0 0 12 23z" />
+              <path
+                fill="#EA4335"
+                d="M12 5.04c1.64 0 3.12.56 4.28 1.67l3.2-3.2C17.52 1.58 14.92 1 12 1 7.35 1 3.37 3.68 1.44 7.6l3.86 3A6.98 6.98 0 0 1 12 5.04z"
+              />
+              <path
+                fill="#4285F4"
+                d="M23.49 12.27c0-.82-.07-1.6-.2-2.36H12v4.51h6.44a5.5 5.5 0 0 1-2.39 3.62l3.71 2.88c2.17-2 3.43-4.94 3.43-8.65z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M5.3 14.4a6.93 6.93 0 0 1 0-4.8l-3.86-3A11.95 11.95 0 0 0 1 12c0 1.92.45 3.74 1.25 5.37l4.05-3.17z"
+              />
+              <path
+                fill="#34A853"
+                d="M12 23c3.24 0 5.97-1.07 7.96-2.92l-3.71-2.88c-1.1.74-2.5 1.18-4.25 1.18-3.23 0-5.97-2.18-6.95-5.11l-3.96 3.07A11.97 11.97 0 0 0 12 23z"
+              />
             </svg>
             <span>Sign In With Google</span>
           </button>
@@ -264,7 +282,7 @@ const LogInPage = () => {
           <p className="text-center text-gray-500 text-xs font-medium pt-4 mb-0">
             Don&apos;t have an account yet?{' '}
             <Link
-              href={`/auth/signup?redirect=${encodeURIComponent(redirectTo)}`}
+              href={`/auth/register?redirect=${encodeURIComponent(redirectTo)}`}
               className="text-[#6D4AFF] hover:text-[#8B5CF6] font-bold ml-1 cursor-pointer no-underline border-b border-transparent hover:border-[#8B5CF6] transition-all"
             >
               Sign Up

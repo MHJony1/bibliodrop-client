@@ -46,7 +46,7 @@ export default function DashboardSidebar({ currentUser, closeSidebar }) {
         fetchOptions: {
           onSuccess: () => {
             toast.success('Logged out successfully! 👋');
-            router.push('/');
+            window.location.href = '/auth/login';
             router.refresh();
           },
         },
