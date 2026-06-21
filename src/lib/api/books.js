@@ -35,16 +35,22 @@ export const getBookById = async (bookId) => {
 };
 
 // GET: Librarian specific books fetch
+
+// GET: Librarian overview
+export const getLibrarianOverview = async (librarianEmail) => {
+  return serverFetch(`/api/librarian/overview?librarianEmail=${librarianEmail}`);
+};
+// GET: Librarian books
 export const getLibrarianBooks = async (librarianEmail) => {
   if (!librarianEmail) return null;
   return serverFetch(`/api/librarian/books?librarianEmail=${encodeURIComponent(librarianEmail)}`);
 };
-
+// GET: Librarian orders
 export const getLibrarianOrders = async (librarianEmail) => {
   if (!librarianEmail) return null;
   return serverFetch(`/api/librarian/orders?librarianEmail=${encodeURIComponent(librarianEmail)}`);
 };
-
+// GET: Librarian transactions
 export const updateOrderStatus = async (orderId, status) => {
   return serverMutation(`/api/orders/${orderId}/status`, { status }, 'PATCH');
 };
