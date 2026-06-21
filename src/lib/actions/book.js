@@ -9,7 +9,9 @@ export async function handleAddBookAction(finalBookData) {
     const user = await getUserSession();
     const bookWithLibrarian = {
       ...finalBookData,
-      librarianEmail: user?.email || "unknown@gmail.com"
+      librarianEmail: user?.email || "unknown@gmail.com",
+      librarianName: user?.name || "Librarian", 
+      userId: user?.id || user?._id || null
     };
     const result = await createBook(bookWithLibrarian);
 

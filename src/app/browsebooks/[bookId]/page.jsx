@@ -201,7 +201,7 @@ export default async function BookDetailsPage({ params }) {
                 <span>
                   Listed by:{' '}
                   <strong className="text-white font-semibold">
-                    Librarian
+                    {book.librarianName || book.librarianEmail || 'System Librarian'}
                   </strong>
                 </span>
               </div>
