@@ -30,14 +30,11 @@ export default function DeliveryHistoryPage() {
 
     try {
       const result = await getUserDeliveries(session.user.email);
-      console.log('📦 Full Response:', result);
+
 
       if (result?.success) {
         const data = result.data || [];
-        console.log('📚 Data:', data);
-        console.log('💰 First totalFee:', data[0]?.totalFee);
-        console.log('💰 First amountPaid:', data[0]?.amountPaid);
-
+        
         setDeliveries(data);
 
         const pending = data.filter((d) => d.status === 'Pending').length;

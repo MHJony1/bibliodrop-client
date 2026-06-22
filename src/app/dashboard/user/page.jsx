@@ -29,6 +29,7 @@ export default function UserDashboardPage() {
 
   const loadOverview = async () => {
     if (!session?.user?.email) return;
+
     
     setLoading(true);
     try {
@@ -226,3 +227,7 @@ export default function UserDashboardPage() {
     </div>
   );
 }
+
+
+
+

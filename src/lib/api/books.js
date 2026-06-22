@@ -1,8 +1,15 @@
-import { serverFetch, serverMutation } from '../core/server';
+import { serverFetch, authFetch, authMutation } from '../core/server';
 
-const EMPTY_VALUES = new Set(['', 'All Categories', 'All', 'all', null, undefined]);
+const EMPTY_VALUES = new Set([
+  '',
+  'All Categories',
+  'All',
+  'all',
+  null,
+  undefined,
+]);
 
-// GET: Fetch all books with filters
+// GET: Fetch all books with filters (Public)
 export const getBooks = async (params = {}) => {
   const cleanParams = {};
 
@@ -18,13 +25,13 @@ export const getBooks = async (params = {}) => {
   return serverFetch(url);
 };
 
-// GET: Fetch a single book by its ID
+// GET: Fetch a single book by its ID (Public)
 export const getBookById = async (bookId) => {
   if (!bookId) {
     console.warn('⚠️ No bookId provided');
     return null;
   }
-  
+
   try {
     const response = await serverFetch(`/api/books/${bookId}`);
     return response;
@@ -34,48 +41,56 @@ export const getBookById = async (bookId) => {
   }
 };
 
+// PROTECTED - Auto Token Added
 
-// GET: Librarian overview
+// GET: Librarian overview (Token needed)
 export const getLibrarianOverview = async (librarianEmail) => {
-  return serverFetch(`/api/librarian/overview?librarianEmail=${librarianEmail}`);
+  return authFetch(`/api/librarian/overview?librarianEmail=${librarianEmail}`);
 };
-// GET: Librarian books
+
+// GET: Librarian books (Token needed)
 export const getLibrarianBooks = async (librarianEmail) => {
   if (!librarianEmail) return null;
-  return serverFetch(`/api/librarian/books?librarianEmail=${encodeURIComponent(librarianEmail)}`);
-};
-// GET: Librarian orders
-export const getLibrarianOrders = async (librarianEmail) => {
-  if (!librarianEmail) return null;
-  return serverFetch(`/api/librarian/orders?librarianEmail=${encodeURIComponent(librarianEmail)}`);
-};
-// GET: Librarian transactions
-export const updateOrderStatus = async (orderId, status) => {
-  return serverMutation(`/api/orders/${orderId}/status`, { status }, 'PATCH');
+  return authFetch(
+    `/api/librarian/books?librarianEmail=${encodeURIComponent(librarianEmail)}`,
+  );
 };
 
-// POST: Create a new book entry using the standard serverFetch helper
+// GET: Librarian orders (Token needed)
+export const getLibrarianOrders = async (librarianEmail) => {
+  if (!librarianEmail) return null;
+  return authFetch(
+    `/api/librarian/orders?librarianEmail=${encodeURIComponent(librarianEmail)}`,
+  );
+};
+
+// PATCH: Update order status (Token needed)
+export const updateOrderStatus = async (orderId, status) => {
+  return authMutation(`/api/orders/${orderId}/status`, { status }, 'PATCH');
+};
+
+// POST: Create a new book (Token needed)
 export const createBook = async (bookData) => {
   try {
-    const response = await serverMutation('/api/books', bookData, 'POST'); 
+    const response = await authMutation('/api/books', bookData, 'POST');
     return response;
   } catch (error) {
-    console.error("API Error in createBook:", error);
+    console.error('API Error in createBook:', error);
     return { success: false, error: error.message };
   }
 };
 
+// PATCH: Update book (Token needed)
 export const updateBook = async (bookId, bookData) => {
-  return serverMutation(`/api/books/${bookId}`, bookData, 'PATCH');
+  return authMutation(`/api/books/${bookId}`, bookData, 'PATCH');
 };
 
-
-// DELETE: Book delete
+// DELETE: Delete book (Token needed)
 export const deleteBook = async (bookId) => {
-  return serverMutation(`/api/books/${bookId}`, {}, 'DELETE');
+  return authMutation(`/api/books/${bookId}`, {}, 'DELETE');
 };
 
-// PATCH: Book status toggle
+// PATCH: Toggle book status (Token needed)
 export const updateBookStatus = async (bookId, status) => {
-  return serverMutation(`/api/books/${bookId}/status`, { status }, 'PATCH');
+  return authMutation(`/api/books/${bookId}/status`, { status }, 'PATCH');
 };

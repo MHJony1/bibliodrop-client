@@ -39,6 +39,9 @@ const features = [
   },
 ];
 
+
+
+
 export default function Banner() {
   const ref = useRef(null);
   const [mounted, setMounted] = useState(false);

@@ -1,27 +1,18 @@
-// lib/api/reviews.js
-import { serverFetch, serverMutation } from '../core/server';
+import { serverFetch, authFetch, authMutation } from '@/lib/core/server';
 
-// Get all reviews for a book
-export const getBookReviews = async (bookId) => {
-  return serverFetch(`/api/books/${bookId}/reviews`);
-};
+//  Public
+export const getBookReviews = (bookId) =>
+  serverFetch(`/api/books/${bookId}/reviews`);
 
-// Add a review
-export const addReview = async (bookId, reviewData) => {
-  return serverMutation(`/api/books/${bookId}/reviews`, reviewData, 'POST');
-};
+// ✅ Protected
+export const addReview = (bookId, reviewData) =>
+  authMutation(`/api/books/${bookId}/reviews`, reviewData, 'POST');
 
-// Update a review
-export const updateReview = async (reviewId, reviewData) => {
-  return serverMutation(`/api/reviews/${reviewId}`, reviewData, 'PATCH');
-};
+export const updateReview = (reviewId, reviewData) =>
+  authMutation(`/api/reviews/${reviewId}`, reviewData, 'PATCH');
 
-// Delete a review
-export const deleteReview = async (reviewId, userEmail) => {
-  return serverMutation(`/api/reviews/${reviewId}`, { userEmail }, 'DELETE');
-};
+export const deleteReview = (reviewId, userEmail) =>
+  authMutation(`/api/reviews/${reviewId}`, { userEmail }, 'DELETE');
 
-// Get user's all reviews
-export const getUserReviews = async (userEmail) => {
-  return serverFetch(`/api/user/reviews?userEmail=${userEmail}`);
-};
+export const getUserReviews = (userEmail) =>
+  authFetch(`/api/user/reviews?userEmail=${userEmail}`);

@@ -17,24 +17,6 @@ export const getUserSession = async () => {
   }
 };
 
-// 2. current user session token get
-// export const getUserToken = async () => {
-//   try {
-//     const session = await auth.api.getSession({
-//       headers: await headers(),
-//     });
-//     return session?.session?.token || null;
-//   } catch (error) {
-//     console.error('Token retrieval error:', error);
-//     return null;
-//   }
-// };
-
-
-
-
-
-
 // 3. specific role based  session get
 export const requireRole = async (role) => {
   const user = await getUserSession();

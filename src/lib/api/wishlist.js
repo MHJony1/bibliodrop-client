@@ -1,27 +1,17 @@
-// lib/api/wishlist.js
-import { serverFetch, serverMutation } from '../core/server';
+import { authFetch, authMutation } from '@/lib/core/server';
 
-// Get user's wishlist
-export const getWishlist = async (userEmail) => {
-  return serverFetch(`/api/user/wishlist?userEmail=${userEmail}`);
-};
+export const getWishlist = (userEmail) =>
+  authFetch(`/api/user/wishlist?userEmail=${userEmail}`);
 
-// Add to wishlist
-export const addToWishlist = async (userEmail, userId, bookId, bookTitle) => {
-  return serverMutation('/api/user/wishlist', {
-    userEmail,
-    userId,
-    bookId,
-    bookTitle
-  }, 'POST');
-};
+export const addToWishlist = (userEmail, userId, bookId, bookTitle) =>
+  authMutation(
+    '/api/user/wishlist',
+    { userEmail, userId, bookId, bookTitle },
+    'POST',
+  );
 
-// Remove from wishlist
-export const removeFromWishlist = async (userEmail, bookId) => {
-  return serverMutation(`/api/user/wishlist/${bookId}`, { userEmail }, 'DELETE');
-};
+export const removeFromWishlist = (userEmail, bookId) =>
+  authMutation(`/api/user/wishlist/${bookId}`, { userEmail }, 'DELETE');
 
-// Check if in wishlist
-export const checkWishlist = async (userEmail, bookId) => {
-  return serverFetch(`/api/user/wishlist/check?userEmail=${userEmail}&bookId=${bookId}`);
-};
+export const checkWishlist = (userEmail, bookId) =>
+  authFetch(`/api/user/wishlist/check?userEmail=${userEmail}&bookId=${bookId}`);

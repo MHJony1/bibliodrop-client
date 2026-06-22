@@ -50,11 +50,6 @@ export default async function BookDetailsPage({ params }) {
     ? book?.deliveredBuyers?.includes(currentUser.email) || false
     : false;
 
-  // ✅ Debug logs (remove in production)
-  console.log('📧 Current User Email:', currentUser?.email);
-  console.log('📋 Delivered Buyers:', book?.deliveredBuyers);
-  console.log('✅ hasPurchased:', hasPurchased);
-
   // Price calculation
   const bookPrice = book?.price !== undefined ? Number(book.price) : 0;
   const deliveryFee =

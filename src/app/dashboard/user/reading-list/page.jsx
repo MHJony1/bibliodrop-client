@@ -30,7 +30,6 @@ export default function ReadingListPage() {
     setLoading(true);
     try {
       const result = await getUserReadingList(session.user.email);
-      console.log('📚 Reading List Response:', result);
       
       if (result?.success) {
         const data = result.data || [];
