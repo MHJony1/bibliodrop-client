@@ -1,9 +1,19 @@
 import React from 'react';
-import { getLibrarianBooks } from "@/lib/api/books";
-import { getLibrarianOrders } from "@/lib/api/books";
-import { auth } from "@/lib/auth"; 
-import { headers } from "next/headers";
-import { BookOpen, DollarSign, Clock, ArrowUpRight, PlusCircle, Truck } from 'lucide-react';
+import { getLibrarianBooks } from '@/lib/api/books';
+import { getLibrarianOrders } from '@/lib/api/books';
+import { auth } from '@/lib/auth';
+import { headers } from 'next/headers';
+import {
+  BookOpen,
+  DollarSign,
+  Clock,
+  ArrowUpRight,
+  PlusCircle,
+  Truck,
+  TrendingUp,
+  Package,
+  CheckCircle,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import LibrarianOverviewChart from '@/components/dashboardrelated/librarianrelated/LibrarianOverviewChart';
@@ -12,169 +22,220 @@ const LibrarianDashboard = async () => {
   const session = await auth.api.getSession({ headers: await headers() });
   const loggedInUserEmail = session?.user?.email;
 
-  // ✅ Fetch both books and orders
   const [booksResponse, ordersResponse] = await Promise.all([
     getLibrarianBooks(loggedInUserEmail),
     getLibrarianOrders(loggedInUserEmail),
   ]);
 
-  const myBooks = booksResponse?.data && Array.isArray(booksResponse.data)
-    ? booksResponse.data : [];
+  const myBooks =
+    booksResponse?.data && Array.isArray(booksResponse.data)
+      ? booksResponse.data
+      : [];
 
-  const myOrders = ordersResponse?.data && Array.isArray(ordersResponse.data)
-    ? ordersResponse.data : [];
+  const myOrders =
+    ordersResponse?.data && Array.isArray(ordersResponse.data)
+      ? ordersResponse.data
+      : [];
 
-  // ✅ Stats Calculation 
-  const pendingOrders = myOrders.filter(o => o.status === 'Pending').length;
-  const dispatchedOrders = myOrders.filter(o => o.status === 'Dispatched').length;
+  const pendingOrders = myOrders.filter((o) => o.status === 'Pending').length;
+  const dispatchedOrders = myOrders.filter(
+    (o) => o.status === 'Dispatched',
+  ).length;
   const totalPending = pendingOrders + dispatchedOrders;
 
-  // ✅ Total Earnings for Delivered orders
   const totalEarnings = myOrders
-    .filter(o => o.status === 'Delivered')
-    .reduce((sum, o) => sum + (Number(o.amount || o.amountPaid || 0)), 0);
+    .filter((o) => o.status === 'Delivered')
+    .reduce((sum, o) => sum + Number(o.amount || o.amountPaid || 0), 0);
 
-  // ✅ Total Deliveries - Delivered orders count
-  const totalDeliveries = myOrders.filter(o => o.status === 'Delivered').length;
+  const totalDeliveries = myOrders.filter(
+    (o) => o.status === 'Delivered',
+  ).length;
 
-  // ✅ Chart Data - Category wise book distribution
   const categoryCounts = {};
-  myBooks.forEach(b => {
+  myBooks.forEach((b) => {
     if (b.category) {
-      const cat = b.category.trim().charAt(0).toUpperCase() + b.category.trim().slice(1);
+      const cat =
+        b.category.trim().charAt(0).toUpperCase() + b.category.trim().slice(1);
       categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
     }
   });
-  const chartData = Object.entries(categoryCounts).map(([name, count]) => ({ name, count }));
+  const chartData = Object.entries(categoryCounts).map(([name, count]) => ({
+    name,
+    count,
+  }));
+
+  const stats = [
+    {
+      icon: BookOpen,
+      label: 'Total Books',
+      value: myBooks.length,
+      color: 'from-blue-500 to-blue-600',
+      bg: 'bg-blue-500/10',
+      border: 'border-blue-500/20',
+    },
+    {
+      icon: DollarSign,
+      label: 'Total Earnings',
+      value: `$${totalEarnings.toFixed(2)}`,
+      color: 'from-emerald-500 to-emerald-600',
+      bg: 'bg-emerald-500/10',
+      border: 'border-emerald-500/20',
+    },
+    {
+      icon: Clock,
+      label: 'Pending Orders',
+      value: totalPending,
+      color: 'from-amber-500 to-amber-600',
+      bg: 'bg-amber-500/10',
+      border: 'border-amber-500/20',
+    },
+    {
+      icon: Truck,
+      label: 'Total Deliveries',
+      value: totalDeliveries,
+      color: 'from-purple-500 to-purple-600',
+      bg: 'bg-purple-500/10',
+      border: 'border-purple-500/20',
+    },
+  ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 text-slate-900 dark:text-slate-100">
-      
+    <div className="space-y-8">
       {/* Header */}
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white bg-linear-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
-            Welcome back, {session?.user?.name || "Librarian"}
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Monitoring profile status, analytics, and book distribution.
-          </p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/20 backdrop-blur-sm">
+              <BookOpen size={22} className="text-violet-400" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                Welcome back, {session?.user?.name || 'Librarian'} 👋
+              </h1>
+              <p className="text-sm text-slate-400 mt-0.5">
+                Monitoring profile status, analytics, and book distribution.
+              </p>
+            </div>
+          </div>
         </div>
+
         <Link
           href="/dashboard/librarian/add-book"
-          className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all shadow-md active:scale-95 self-start sm:self-center cursor-pointer"
+          className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 text-white text-sm font-medium hover:shadow-[0_0_30px_rgba(109,74,255,0.3)] transition-all flex items-center gap-2"
         >
-          <PlusCircle size={16} /> Add New Book
+          <PlusCircle size={16} />
+          Add New Book
         </Link>
       </div>
 
-      {/* ✅ Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
-        {/* Total Books */}
-        <div className="bg-white dark:bg-slate-900/40 p-5 sm:p-6 rounded-2xl border border-slate-200/60 dark:border-white/5 shadow-xl shadow-slate-100/30 dark:shadow-none flex items-center justify-between backdrop-blur-md">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total Books</p>
-            <h3 className="text-2xl sm:text-3xl font-extrabold mt-2 text-slate-800 dark:text-white">{myBooks.length}</h3>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {stats.map((stat, index) => (
+          <div
+            key={stat.label}
+            className={`p-5 rounded-2xl bg-gradient-to-br from-slate-900/60 to-slate-800/30 border ${stat.border} backdrop-blur-sm hover:border-white/10 transition-all duration-300 group`}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={`p-2.5 rounded-xl ${stat.bg} group-hover:scale-110 transition-transform duration-300`}
+              >
+                <stat.icon size={18} className="text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">
+                  {stat.label}
+                </p>
+                <p className="text-2xl font-bold text-white mt-0.5">
+                  {typeof stat.value === 'number' ? stat.value : stat.value}
+                </p>
+              </div>
+            </div>
           </div>
-          <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-100/50 dark:border-blue-900/30">
-            <BookOpen size={20} />
-          </div>
-        </div>
-
-        {/* ✅ Total Earnings */}
-        <div className="bg-white dark:bg-slate-900/40 p-5 sm:p-6 rounded-2xl border border-slate-200/60 dark:border-white/5 shadow-xl shadow-slate-100/30 dark:shadow-none flex items-center justify-between backdrop-blur-md">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total Earnings</p>
-            <h3 className="text-2xl sm:text-3xl font-extrabold mt-2 text-emerald-600 dark:text-emerald-400">
-              ${totalEarnings.toFixed(2)}
-            </h3>
-          </div>
-          <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-900/30">
-            <DollarSign size={20} />
-          </div>
-        </div>
-
-        {/* ✅ Pending Orders */}
-        <div className="bg-white dark:bg-slate-900/40 p-5 sm:p-6 rounded-2xl border border-slate-200/60 dark:border-white/5 shadow-xl shadow-slate-100/30 dark:shadow-none flex items-center justify-between backdrop-blur-md">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Pending Orders</p>
-            <h3 className="text-2xl sm:text-3xl font-extrabold mt-2 text-amber-500 dark:text-amber-400">{totalPending}</h3>
-          </div>
-          <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-500 dark:text-amber-400 border border-amber-100/50 dark:border-amber-900/30">
-            <Clock size={20} />
-          </div>
-        </div>
-
-        {/* ✅ Total Deliveries  */}
-        <div className="bg-white dark:bg-slate-900/40 p-5 sm:p-6 rounded-2xl border border-slate-200/60 dark:border-white/5 shadow-xl shadow-slate-100/30 dark:shadow-none flex items-center justify-between backdrop-blur-md">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Total Deliveries</p>
-            <h3 className="text-2xl sm:text-3xl font-extrabold mt-2 text-violet-600 dark:text-violet-400">{totalDeliveries}</h3>
-          </div>
-          <div className="p-3 rounded-xl bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 border border-violet-100/50 dark:border-violet-900/30">
-            <Truck size={20} />
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Chart + Recent Books */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8">
-        
-        {/* Chart */}
-        <div className="lg:col-span-3 bg-white dark:bg-slate-900/40 p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-white/5 shadow-xl backdrop-blur-md">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-white">Books by Category</h2>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">Dynamic distribution of your listed catalog.</p>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="lg:col-span-3 bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-bold text-white">
+                Books by Category
+              </h2>
+              <p className="text-xs text-slate-400">
+                Dynamic distribution of your listed catalog.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20">
+              <span className="text-xs text-violet-400 font-bold">
+                {myBooks.length}
+              </span>
+              <span className="text-xs text-slate-500">Total Titles</span>
+            </div>
+          </div>
           {chartData.length > 0 ? (
             <LibrarianOverviewChart chartData={chartData} />
           ) : (
-            <div className="flex items-center justify-center h-48 text-slate-400 dark:text-slate-500 text-sm">
+            <div className="flex items-center justify-center h-56 text-slate-400 text-sm border border-dashed border-slate-700/50 rounded-xl">
               No books added yet
             </div>
           )}
         </div>
 
         {/* Recent Books */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900/40 p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-white/5 shadow-xl backdrop-blur-md">
+        <div className="lg:col-span-2 bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-bold text-slate-800 dark:text-white">Recent Books</h2>
-              <p className="text-xs text-slate-400 dark:text-slate-500">Your latest listed titles.</p>
+              <h2 className="text-lg font-bold text-white">Recent Books</h2>
+              <p className="text-xs text-slate-400">
+                Your latest listed titles.
+              </p>
             </div>
-            <Link href="/dashboard/librarian/manage-inventory" className="text-xs font-semibold text-violet-600 dark:text-violet-400 hover:underline flex items-center gap-0.5">
+            <Link
+              href="/dashboard/librarian/manage-inventory"
+              className="text-xs text-violet-400 hover:text-white transition-colors flex items-center gap-1"
+            >
               View All <ArrowUpRight size={12} />
             </Link>
           </div>
 
-          <div className="divide-y divide-slate-100 dark:divide-white/5">
+          <div className="divide-y divide-slate-800/30">
             {myBooks.slice(0, 4).map((book, idx) => (
-              <div key={book._id || idx} className="py-3.5 flex items-center justify-between group">
+              <div
+                key={book._id || idx}
+                className="py-3.5 flex items-center justify-between group"
+              >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="relative h-12 w-9 rounded-md bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 border border-slate-200/60 dark:border-white/10 shadow-sm">
-                    <Image 
-                      src={book.coverImage || 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e'} 
+                  <div className="relative h-12 w-9 rounded-lg overflow-hidden bg-slate-800 border border-slate-700/50 shrink-0">
+                    <Image
+                      src={
+                        book.coverImage ||
+                        'https://images.unsplash.com/photo-1543002588-bfa74002ed7e'
+                      }
                       alt={book.title || 'Book cover'}
-                      fill 
+                      fill
                       sizes="36px"
                       className="object-cover transition-transform group-hover:scale-105"
-                      quality={100}
-                      unoptimized={true}
+                      unoptimized
                     />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
+                    <p className="text-sm font-semibold text-white truncate group-hover:text-violet-400 transition-colors">
                       {book.title || 'Untitled'}
                     </p>
-                    <p className="text-xs text-slate-400 mt-0.5 truncate">by {book.author || 'Unknown'}</p>
+                    <p className="text-xs text-slate-500 mt-0.5 truncate">
+                      by {book.author || 'Unknown'}
+                    </p>
                   </div>
                 </div>
-                <span className="text-xs font-bold px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-white/5 shrink-0">
+                <span className="text-xs font-bold px-2 py-1 rounded-lg bg-slate-800/60 text-slate-400 border border-slate-700/50 shrink-0">
                   #{idx + 1}
                 </span>
               </div>
             ))}
-            
+
             {myBooks.length === 0 && (
-              <div className="text-center py-12 text-slate-400 dark:text-slate-500 font-medium text-sm">
+              <div className="text-center py-12 text-slate-500 font-medium text-sm">
                 No books in your catalog yet.
               </div>
             )}

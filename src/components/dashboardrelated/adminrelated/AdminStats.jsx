@@ -1,71 +1,70 @@
+'use client';
+
 import React from 'react';
 import { Users, BookOpen, Truck, DollarSign } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-/**
- * Individual Metric Card with custom background glow and micro-interactions
- */
-const StatCard = ({ title, value, icon: Icon, badgeText, gradientClass }) => {
+const StatCard = ({ title, value, icon: Icon, badgeText, delay = 0 }) => {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-slate-900/40 border border-slate-800/80 p-6 transition-all duration-300 hover:border-slate-700 hover:-translate-y-1 group">
-      {/* Decorative radial ambient glow */}
-      <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full blur-2xl opacity-10 transition-opacity duration-500 group-hover:opacity-20 ${gradientClass}`} />
-      
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: delay * 0.1, duration: 0.5 }}
+      className="rounded-2xl bg-slate-900/40 border border-slate-800/60 p-6 hover:border-slate-700 transition-all"
+    >
       <div className="flex items-center justify-between">
-        <div className="space-y-2">
+        <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             {title}
           </p>
-          <h3 className="text-3xl font-bold tracking-tight text-slate-100 font-sans">
-            {value}
-          </h3>
+          <h3 className="text-2xl font-bold text-white mt-1">{value}</h3>
         </div>
-        <div className="p-3.5 bg-slate-800/60 border border-slate-700/40 rounded-xl text-purple-400 group-hover:scale-110 transition-transform duration-300">
+        <div className="p-3 bg-slate-800/60 border border-slate-700/40 rounded-xl text-violet-400">
           <Icon className="w-5 h-5" />
         </div>
       </div>
-      
-      <div className="mt-4 flex items-center gap-1.5">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-        <span className="text-[11px] font-medium text-slate-500">{badgeText}</span>
-      </div>
-    </div>
+      <p className="text-xs text-slate-500 mt-3">{badgeText}</p>
+    </motion.div>
   );
 };
 
-/**
- * Main Metrics Grid mapping system data dynamically
- */
 const AdminStats = ({ metrics }) => {
+  const stats = [
+    {
+      title: 'Total Users',
+      value: metrics?.totalUsers?.toLocaleString() || '0',
+      icon: Users,
+      badgeText: 'Active Members',
+      delay: 0,
+    },
+    {
+      title: 'Total Books',
+      value: metrics?.totalBooks?.toLocaleString() || '0',
+      icon: BookOpen,
+      badgeText: 'Cataloged Titles',
+      delay: 1,
+    },
+    {
+      title: 'Total Deliveries',
+      value: metrics?.totalDeliveries?.toLocaleString() || '0',
+      icon: Truck,
+      badgeText: 'Fulfilled Orders',
+      delay: 2,
+    },
+    {
+      title: 'Total Revenue',
+      value: `$${metrics?.totalRevenue?.toFixed(2) || '0.00'}`,
+      icon: DollarSign,
+      badgeText: 'Gross Earnings',
+      delay: 3,
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-      <StatCard
-        title="Total Users"
-        value={metrics?.totalUsers?.toLocaleString() || '0'}
-        icon={Users}
-        badgeText="Active Platform Members"
-        gradientClass="bg-blue-500"
-      />
-      <StatCard
-        title="Total Books"
-        value={metrics?.totalBooks?.toLocaleString() || '0'}
-        icon={BookOpen}
-        badgeText="Cataloged Book Titles"
-        gradientClass="bg-purple-500"
-      />
-      <StatCard
-        title="Total Deliveries"
-        value={metrics?.totalDeliveries?.toLocaleString() || '0'}
-        icon={Truck}
-        badgeText="Successfully Fulfilled"
-        gradientClass="bg-amber-500"
-      />
-      <StatCard
-        title="Total Revenue"
-        value={`$${metrics?.totalRevenue?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`}
-        icon={DollarSign}
-        badgeText="Gross Aggregate Earnings"
-        gradientClass="bg-emerald-500"
-      />
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {stats.map((stat) => (
+        <StatCard key={stat.title} {...stat} />
+      ))}
     </div>
   );
 };

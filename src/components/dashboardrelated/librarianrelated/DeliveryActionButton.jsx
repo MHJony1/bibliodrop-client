@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Truck, CheckCircle } from 'lucide-react';
-
+import { Truck, CheckCircle, Clock, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { handleUpdateOrderStatusAction } from '@/lib/actions/order';
 
@@ -28,10 +27,19 @@ const DeliveryActionButton = ({ orderId, currentStatus }) => {
       <button
         onClick={() => handleUpdate('Dispatched')}
         disabled={loading}
-        className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-3 py-1.5 rounded-lg transition-all active:scale-95 shadow-sm cursor-pointer disabled:opacity-50"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/20 hover:border-blue-400/40 transition-all text-xs font-semibold disabled:opacity-50 group"
       >
-        {loading ? <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Truck size={12} />}
-        Mark Dispatched
+        {loading ? (
+          <Loader2 size={14} className="animate-spin" />
+        ) : (
+          <>
+            <Truck
+              size={14}
+              className="group-hover:translate-x-0.5 transition-transform"
+            />
+            Mark Dispatched
+          </>
+        )}
       </button>
     );
   }
@@ -41,17 +49,27 @@ const DeliveryActionButton = ({ orderId, currentStatus }) => {
       <button
         onClick={() => handleUpdate('Delivered')}
         disabled={loading}
-        className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs px-3 py-1.5 rounded-lg transition-all active:scale-95 shadow-sm cursor-pointer disabled:opacity-50"
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-400/40 transition-all text-xs font-semibold disabled:opacity-50 group"
       >
-        {loading ? <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <CheckCircle size={12} />}
-        Complete Delivery
+        {loading ? (
+          <Loader2 size={14} className="animate-spin" />
+        ) : (
+          <>
+            <CheckCircle
+              size={14}
+              className="group-hover:scale-110 transition-transform"
+            />
+            Complete Delivery
+          </>
+        )}
       </button>
     );
   }
 
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500 font-medium">
-      <CheckCircle size={13} className="text-emerald-500" /> Complete
+    <span className="inline-flex items-center gap-2 text-xs text-emerald-400 font-medium">
+      <CheckCircle size={14} className="text-emerald-400" />
+      <span className="text-slate-400">Completed</span>
     </span>
   );
 };

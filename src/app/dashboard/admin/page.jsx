@@ -4,62 +4,100 @@ import { requireRole } from '@/lib/core/session';
 import AdminStats from '@/components/dashboardrelated/adminrelated/AdminStats';
 import CategoryChart from '@/components/dashboardrelated/adminrelated/CategoryChart';
 import RevenueChart from '@/components/dashboardrelated/adminrelated/RevenueChart';
-
+import { Shield, Activity, Zap, TrendingUp } from 'lucide-react';
 
 export default async function AdminDashboard() {
-  // 🛡️ Strict Route Protection Guard
   const sessionUser = await requireRole('admin');
-  
-  // Unified dashboard metrics payload from backend api
   const overviewResponse = await getAdminOverview();
 
-  // Extract metrics safely with production-grade defaults
-  const metricsData = overviewResponse?.metrics || { 
-    totalUsers: 0, 
-    totalBooks: 0, 
-    totalDeliveries: 0, 
-    totalRevenue: 0 
+  const metricsData = overviewResponse?.metrics || {
+    totalUsers: 0,
+    totalBooks: 0,
+    totalDeliveries: 0,
+    totalRevenue: 0,
   };
-  
-  // Directly extract live arrays generated from backend calculations
+
   const categoryChartData = overviewResponse?.categoryChart || [];
   const monthlyRevenueData = overviewResponse?.monthlyRevenueFeed || [];
 
+  const statusItems = [
+    { label: 'System Status', value: 'Operational', color: 'text-emerald-400' },
+    { label: 'Uptime', value: '99.9%', color: 'text-blue-400' },
+    { label: 'Active Sessions', value: 'Live', color: 'text-amber-400' },
+  ];
+
   return (
-    // Fixed padding setup to elevate the header beautifully according to screenshot rules
-    <div className="space-y-6 pt-2 px-6 pb-8 lg:pt-3 lg:px-8 bg-slate-950 min-h-screen text-slate-100">
-      
-      {/* Welcome & Dashboard Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-900 pb-4">
+    <div className="space-y-8">
+      {/* Welcome Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-100 via-slate-300 to-slate-500 bg-clip-text text-transparent">
-            Admin Dashboard
-          </h1>
-          <p className="text-xs lg:text-sm text-slate-400 mt-0.5">
-            Platform-wide overview and analytics for <span className="text-purple-400 font-semibold">{sessionUser?.name || 'Administrator'}</span>
-          </p>
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/20 backdrop-blur-sm">
+              <Shield size={22} className="text-violet-400" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                Admin Dashboard
+              </h1>
+              <p className="text-sm text-slate-400 mt-0.5">
+                Platform-wide overview and analytics for{' '}
+                <span className="text-violet-400 font-semibold">
+                  {sessionUser?.name || 'Administrator'}
+                </span>
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="text-[11px] font-mono tracking-wider text-purple-400 bg-purple-500/5 px-3 py-1.5 rounded-xl border border-purple-500/10">
-          SYSTEM LIVE FEED
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-xs text-emerald-400 font-medium">
+              System Live
+            </span>
+          </div>
+          <div className="px-4 py-2 rounded-xl bg-violet-500/10 border border-violet-500/20">
+            <span className="text-xs text-violet-400 font-mono tracking-wider">
+              ⚡ ADMIN PANEL
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Top 4 Metric Summaries Grid Module */}
+      {/* Status Bar */}
+      <div className="flex flex-wrap items-center gap-4 px-5 py-3 rounded-2xl bg-slate-900/40 border border-slate-800/60 backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <Activity size={14} className="text-slate-500" />
+          <span className="text-xs text-slate-400 font-medium">
+            Platform Status:
+          </span>
+        </div>
+        {statusItems.map((item) => (
+          <div key={item.label} className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60" />
+            <span className="text-xs text-slate-400">{item.label}</span>
+            <span className={`text-xs font-semibold ${item.color}`}>
+              {item.value}
+            </span>
+          </div>
+        ))}
+        <div className="flex-1" />
+        <span className="text-[10px] text-slate-500 font-mono tracking-wider">
+          LAST SYNC: {new Date().toLocaleTimeString()}
+        </span>
+      </div>
+
+      {/* Stats Cards */}
       <AdminStats metrics={metricsData} />
 
-      {/* Data Visualization Charts Layout Grid */}
+      {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Left Side: Books Distribution Pie Chart (Takes 1 Column) */}
         <div className="lg:col-span-1">
           <CategoryChart data={categoryChartData} />
         </div>
-
-        {/* Right Side: Financial Performance Area Chart (Takes 2 Columns for seamless 12-month rendering) */}
         <div className="lg:col-span-2">
           <RevenueChart data={monthlyRevenueData} />
         </div>
-
       </div>
     </div>
   );

@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Eye, EyeOff, Edit2, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, Edit2, Trash2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { handleDeleteBookAction, handleToggleBookStatusAction, handleEditBookAction } from '@/lib/actions/book';
+import {
+  handleDeleteBookAction,
+  handleToggleBookStatusAction,
+  handleEditBookAction,
+} from '@/lib/actions/book';
 import EditBookModal from './EditBookModal';
-
 
 const BookActionButtons = ({ bookId, initialStatus, book }) => {
   const [status, setStatus] = useState(initialStatus || 'Pending Approval');
@@ -14,7 +17,7 @@ const BookActionButtons = ({ bookId, initialStatus, book }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     title: book?.title || '',
     author: book?.author || '',
@@ -24,8 +27,8 @@ const BookActionButtons = ({ bookId, initialStatus, book }) => {
     deliveryFee: book?.deliveryFee || '',
   });
 
-  useEffect(() => { 
-    setMounted(true); 
+  useEffect(() => {
+    setMounted(true);
   }, []);
 
   useEffect(() => {
@@ -60,7 +63,8 @@ const BookActionButtons = ({ bookId, initialStatus, book }) => {
   };
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this book permanently?')) return;
+    if (!confirm('Are you sure you want to delete this book permanently?'))
+      return;
     const toastId = toast.loading('Deleting book...');
     try {
       const result = await handleDeleteBookAction(bookId);
@@ -93,51 +97,93 @@ const BookActionButtons = ({ bookId, initialStatus, book }) => {
     }
   };
 
-  const isPending = status === 'Pending Approval' || status === 'Pending Delivery' || !status;
+  const isPending =
+    status === 'Pending Approval' || status === 'Pending Delivery' || !status;
+  const isPublished = status === 'Published';
 
   return (
     <>
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-end gap-1.5">
+        {/* Status Toggle Button */}
         {isPending ? (
-          <button disabled title="Cannot toggle while Pending Approval"
-            className="p-2 text-slate-300 dark:text-slate-700 cursor-not-allowed">
-            <EyeOff size={16} />
+          <button
+            disabled
+            title="Cannot toggle while Pending Approval"
+            className="p-2 rounded-lg bg-slate-800/40 text-slate-600 cursor-not-allowed"
+          >
+            <EyeOff size={15} />
           </button>
-        ) : status === 'Published' ? (
-          <button onClick={handleToggle} disabled={loading} title="Click to Unpublish"
-            className="p-2 text-slate-500 hover:text-rose-500 dark:text-slate-400 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all cursor-pointer active:scale-95 disabled:opacity-50">
-            <Eye size={16} />
+        ) : loading ? (
+          <button
+            disabled
+            className="p-2 rounded-lg bg-slate-800/40 text-slate-400 cursor-wait"
+          >
+            <Loader2 size={15} className="animate-spin" />
+          </button>
+        ) : isPublished ? (
+          <button
+            onClick={handleToggle}
+            title="Unpublish Book"
+            className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-400/40 transition-all group"
+          >
+            <Eye
+              size={15}
+              className="group-hover:scale-110 transition-transform"
+            />
           </button>
         ) : (
-          <button onClick={handleToggle} disabled={loading} title="Click to Publish"
-            className="p-2 text-slate-500 hover:text-emerald-500 dark:text-slate-400 dark:hover:text-emerald-400 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all cursor-pointer active:scale-95 disabled:opacity-50">
-            <EyeOff size={16} />
+          <button
+            onClick={handleToggle}
+            title="Publish Book"
+            className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20 hover:border-amber-400/40 transition-all group"
+          >
+            <EyeOff
+              size={15}
+              className="group-hover:scale-110 transition-transform"
+            />
           </button>
         )}
 
-        <button onClick={() => setShowEditModal(true)} title="Edit Details"
-          className="p-2 text-slate-500 hover:text-violet-600 dark:text-slate-400 dark:hover:text-violet-400 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-950/20 transition-all active:scale-95 cursor-pointer">
-          <Edit2 size={16} />
+        {/* Edit Button */}
+        <button
+          onClick={() => setShowEditModal(true)}
+          title="Edit Book"
+          className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500/20 hover:border-blue-400/40 transition-all group"
+        >
+          <Edit2
+            size={15}
+            className="group-hover:scale-110 transition-transform"
+          />
         </button>
 
-        <button onClick={handleDelete} title="Delete Permanently"
-          className="p-2 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all active:scale-95 cursor-pointer">
-          <Trash2 size={16} />
+        {/* Delete Button */}
+        <button
+          onClick={handleDelete}
+          title="Delete Book"
+          className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:border-red-400/40 transition-all group"
+        >
+          <Trash2
+            size={15}
+            className="group-hover:scale-110 transition-transform"
+          />
         </button>
       </div>
 
-      {/* 🎯 আলাদা করা মোডাল কম্পোনেন্টটি এখানে Portal দিয়ে সেফলি রেন্ডার হচ্ছে */}
-      {mounted && showEditModal && typeof document !== 'undefined' && createPortal(
-        <EditBookModal 
-          isOpen={showEditModal}
-          onClose={() => setShowEditModal(false)}
-          formData={formData}
-          setFormData={setFormData}
-          onSubmit={handleEditSubmit}
-          editLoading={editLoading}
-        />, 
-        document.body
-      )}
+      {/* Edit Modal */}
+      {mounted &&
+        showEditModal &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <EditBookModal
+            isOpen={showEditModal}
+            onClose={() => setShowEditModal(false)}
+            formData={formData}
+            setFormData={setFormData}
+            onSubmit={handleEditSubmit}
+            editLoading={editLoading}
+          />,
+          document.body,
+        )}
     </>
   );
 };

@@ -11,6 +11,8 @@ import {
   Layers,
   DollarSign,
   PackageOpen,
+  TrendingUp,
+  Clock,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -28,52 +30,133 @@ const ManageInventoryPage = async () => {
       ? apiResponse.data
       : [];
 
+  // Calculate stats
+  const totalBooks = booksData.length;
+  const publishedBooks = booksData.filter(
+    (b) => b.status === 'Published',
+  ).length;
+  const pendingBooks = booksData.filter(
+    (b) => b.status === 'Pending Approval' || b.status === 'Pending Delivery',
+  ).length;
+
   return (
-    <div className="max-w-7xl mx-auto px-4 py-2 sm:px-6 lg:px-8 text-slate-900 dark:text-slate-100">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="mb-8 border-b border-slate-100 dark:border-white/5 pb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white bg-linear-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
-            Manage Inventory
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5">
-            Overview, status control, and publishing actions for your listed
-            catalog.
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/20 backdrop-blur-sm">
+              <BookOpen size={22} className="text-violet-400" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                Manage Inventory
+              </h1>
+              <p className="text-sm text-slate-400 mt-0.5">
+                Overview, status control, and publishing actions for your listed
+                catalog.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-500/10 border border-violet-500/20">
+            <BookOpen size={14} className="text-violet-400" />
+            <span className="text-xs text-violet-400 font-semibold">
+              {totalBooks} Titles
+            </span>
+          </div>
+          <Link
+            href="/dashboard/librarian/add-book"
+            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 text-white text-sm font-medium hover:shadow-[0_0_30px_rgba(109,74,255,0.3)] transition-all flex items-center gap-2"
+          >
+            Add Book
+          </Link>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60">
+          <p className="text-xs text-slate-400 font-medium">Total Books</p>
+          <p className="text-2xl font-bold text-white mt-1">{totalBooks}</p>
+        </div>
+        <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60">
+          <p className="text-xs text-slate-400 font-medium">Published</p>
+          <p className="text-2xl font-bold text-emerald-400 mt-1">
+            {publishedBooks}
           </p>
         </div>
-        <div className="bg-violet-50 dark:bg-violet-950/30 border border-violet-100 dark:border-violet-900/50 rounded-xl px-4 py-2.5 text-xs font-semibold text-violet-700 dark:text-violet-400 flex items-center gap-2 self-start sm:self-center">
-          <BookOpen size={14} />
-          Your Titles: {booksData.length}
+        <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60">
+          <p className="text-xs text-slate-400 font-medium">Pending</p>
+          <p className="text-2xl font-bold text-amber-400 mt-1">
+            {pendingBooks}
+          </p>
+        </div>
+        <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/60">
+          <p className="text-xs text-slate-400 font-medium">Unpublished</p>
+          <p className="text-2xl font-bold text-slate-400 mt-1">
+            {totalBooks - publishedBooks - pendingBooks}
+          </p>
         </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden bg-white dark:bg-slate-900/40 border border-slate-200/80 dark:border-white/5 rounded-2xl shadow-xl shadow-slate-100/40 dark:shadow-none backdrop-blur-md">
+      <div className="w-full rounded-2xl border border-slate-800/60 overflow-hidden shadow-2xl shadow-black/40 bg-slate-900/30 backdrop-blur-sm">
+        <div className="px-6 py-3.5 bg-slate-900/80 border-b border-slate-800/60 flex items-center gap-2.5">
+          <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
+          <span className="text-slate-400 text-xs font-medium">
+            <span className="text-white font-bold">{totalBooks}</span> books in
+            your catalog
+            <span className="text-slate-500 ml-2">
+              • {publishedBooks} published • {pendingBooks} pending
+            </span>
+          </span>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-100 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/80 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                <th className="py-4 px-6">Book Details</th>
-                <th className="py-4 px-6">Category</th>
-                <th className="py-4 px-6">Delivery Fee</th>
-                <th className="py-4 px-6">Status</th>
-                <th className="py-4 px-6 text-right">Actions</th>
+              <tr className="border-b border-slate-800/60 bg-slate-950/80">
+                {[
+                  'Book Details',
+                  'Category',
+                  'Price',
+                  'Delivery Fee',
+                  'Status',
+                  'Actions',
+                ].map((head, index) => (
+                  <th
+                    key={head}
+                    className={`px-5 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-[0.18em] whitespace-nowrap ${
+                      index === 0 ? 'pl-6' : ''
+                    } ${index === 5 ? 'text-right' : ''}`}
+                  >
+                    {head}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-white/5 text-sm">
+            <tbody className="divide-y divide-slate-800/30">
               {booksData.length === 0 ? (
                 <tr>
-                  <td colSpan="5">
-                    <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-400 dark:text-slate-600">
-                      <PackageOpen size={40} strokeWidth={1.2} />
-                      <p className="font-medium text-sm">
-                        No books listed under your account.
+                  <td colSpan="6">
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                      <div className="p-6 rounded-full bg-slate-800/40 border border-slate-700/50 mb-4">
+                        <PackageOpen size={40} className="text-slate-600" />
+                      </div>
+                      <p className="text-slate-400 font-medium">
+                        No books listed yet
+                      </p>
+                      <p className="text-slate-500 text-sm mt-1">
+                        Start by adding your first book
                       </p>
                       <Link
                         href="/dashboard/librarian/add-book"
-                        className="mt-1 text-xs font-semibold text-violet-600 dark:text-amber-400 hover:underline underline-offset-4"
+                        className="mt-4 px-6 py-2.5 rounded-xl bg-violet-500/20 border border-violet-500/30 text-violet-400 text-sm font-medium hover:bg-violet-500/30 transition-all"
                       >
-                        + Add your first book
+                        + Add Book
                       </Link>
                     </div>
                   </td>
@@ -88,12 +171,12 @@ const ManageInventoryPage = async () => {
                   return (
                     <tr
                       key={book._id}
-                      className="group hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors duration-200"
+                      className="hover:bg-slate-800/30 transition-colors group"
                     >
                       {/* Book Info */}
-                      <td className="py-4 px-6">
+                      <td className="px-5 py-4 pl-6">
                         <div className="flex items-center gap-4">
-                          <div className="relative h-16 w-12 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 shadow-sm border border-slate-200/50 dark:border-white/10 shrink-0 transition-transform duration-300 group-hover:scale-105">
+                          <div className="relative h-14 w-10 rounded-lg overflow-hidden bg-slate-800 border border-slate-700/50 shrink-0 transition-transform duration-300 group-hover:scale-105">
                             <Image
                               src={
                                 book.coverImage ||
@@ -101,74 +184,75 @@ const ManageInventoryPage = async () => {
                               }
                               alt={book.title || 'Book Cover'}
                               fill
-                              sizes="48px"
+                              sizes="40px"
                               className="object-cover"
-                              priority={true}
+                              priority
                             />
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-violet-600 dark:group-hover:text-amber-400 transition-colors">
-                              {book.title}
+                            <span className="text-sm font-semibold text-white truncate max-w-[200px] group-hover:text-violet-400 transition-colors">
+                              {book.title || 'Untitled'}
                             </span>
-                            <span className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">
-                              by {book.author}
-                            </span>
-                            <span className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                              ${Number(book.price || 0).toFixed(2)}
+                            <span className="text-xs text-slate-500 truncate">
+                              by {book.author || 'Unknown'}
                             </span>
                           </div>
                         </div>
                       </td>
 
                       {/* Category */}
-                      <td className="py-4 px-6 text-slate-600 dark:text-slate-400 font-medium">
-                        <div className="flex items-center gap-1.5">
-                          <Layers size={14} className="text-slate-400" />
+                      <td className="px-5 py-4">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[10px] font-medium text-violet-400">
+                          <Layers size={11} />
                           {formattedCategory}
-                        </div>
+                        </span>
+                      </td>
+
+                      {/* Price */}
+                      <td className="px-5 py-4">
+                        <span className="text-sm font-semibold text-white">
+                          ${Number(book.price || 0).toFixed(2)}
+                        </span>
                       </td>
 
                       {/* Delivery Fee */}
-                      <td className="py-4 px-6 text-slate-800 dark:text-slate-200 font-semibold">
-                        <div className="flex items-center">
-                          <DollarSign
-                            size={14}
-                            className="text-slate-400 mr-0.5"
-                          />
+                      <td className="px-5 py-4">
+                        <span className="text-sm text-slate-300 flex items-center gap-0.5">
+                          <DollarSign size={14} className="text-slate-500" />
                           {Number(book.deliveryFee || 0).toFixed(2)}
-                        </div>
+                        </span>
                       </td>
 
                       {/* Status */}
-                      <td className="py-4 px-6">
+                      <td className="px-5 py-4">
                         {book.status === 'Published' && (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/30">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" />
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                             Published
                           </span>
                         )}
                         {book.status === 'Unpublished' && (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-white/10">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mr-1.5" />
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                             Unpublished
                           </span>
                         )}
                         {(book.status === 'Pending Approval' ||
                           book.status === 'Pending Delivery' ||
                           !book.status) && (
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/30">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5" />
-                            {book.status || 'Pending Approval'}
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                            {book.status || 'Pending'}
                           </span>
                         )}
                       </td>
 
                       {/* Actions */}
-                      <td className="py-4 px-6 text-right">
+                      <td className="px-5 py-4 text-right">
                         <BookActionButtons
                           bookId={book._id.toString()}
                           initialStatus={book.status}
-                           book={book}
+                          book={book}
                         />
                       </td>
                     </tr>
@@ -177,6 +261,19 @@ const ManageInventoryPage = async () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-3 bg-slate-900/60 border-t border-slate-800/60 flex items-center justify-between">
+          <span className="text-xs text-slate-500">
+            Showing{' '}
+            <span className="text-white font-medium">{booksData.length}</span>{' '}
+            books
+          </span>
+          <span className="text-xs text-slate-500 flex items-center gap-1.5">
+            <Clock size={12} />
+            Updated: {new Date().toLocaleTimeString()}
+          </span>
         </div>
       </div>
     </div>
