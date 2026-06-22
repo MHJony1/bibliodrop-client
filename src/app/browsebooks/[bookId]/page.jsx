@@ -36,7 +36,7 @@ export default async function BookDetailsPage({ params }) {
     );
   }
 
-  // ✅ Fixed: email-based librarian owner check (userId match করে না সবসময়)
+  // ✅ Librarian owner check
   const currentUserEmail = currentUser?.email?.trim().toLowerCase();
   const bookOwnerEmail = book?.librarianEmail?.trim().toLowerCase();
   const isLibrarianOwner =
@@ -45,7 +45,15 @@ export default async function BookDetailsPage({ params }) {
     bookOwnerEmail &&
     currentUserEmail === bookOwnerEmail;
 
-  const hasPurchased = book?.buyers?.includes(currentUser?.id) || false;
+  // ✅ Check if current user has delivered this book
+  const hasPurchased = currentUser?.email
+    ? book?.deliveredBuyers?.includes(currentUser.email) || false
+    : false;
+
+  // ✅ Debug logs (remove in production)
+  console.log('📧 Current User Email:', currentUser?.email);
+  console.log('📋 Delivered Buyers:', book?.deliveredBuyers);
+  console.log('✅ hasPurchased:', hasPurchased);
 
   // Price calculation
   const bookPrice = book?.price !== undefined ? Number(book.price) : 0;
@@ -92,9 +100,8 @@ export default async function BookDetailsPage({ params }) {
     : 'N/A';
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-[#121B3A] via-[#0E152E] to-[#0A0E22] text-[#D1D5DB] antialiased">
+    <div className="min-h-screen bg-gradient-to-br from-[#121B3A] via-[#0E152E] to-[#0A0E22] text-[#D1D5DB] antialiased">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 pb-8">
-
         {/* Back navigation */}
         <div className="mb-8">
           <Link
@@ -111,10 +118,9 @@ export default async function BookDetailsPage({ params }) {
 
         {/* Showcase Layout Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 items-center">
-
           {/* Left Side: Image Showcase */}
           <div className="w-full flex justify-center md:justify-start">
-            <div className="relative w-full max-w-107.5 md:max-w-112.5 aspect-square rounded-[2rem] overflow-hidden bg-[#16224F]/40 border border-white/8 shadow-[0_20px_50px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-white/15">
+            <div className="relative w-full max-w-[400px] md:max-w-[450px] aspect-square rounded-[2rem] overflow-hidden bg-[#16224F]/40 border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-white/20">
               <Image
                 src={
                   book?.coverImage ||
@@ -210,7 +216,9 @@ export default async function BookDetailsPage({ params }) {
                 <span>
                   Listed by:{' '}
                   <strong className="text-white font-semibold">
-                    {book.librarianName || book.librarianEmail || 'System Librarian'}
+                    {book.librarianName ||
+                      book.librarianEmail ||
+                      'System Librarian'}
                   </strong>
                 </span>
               </div>
@@ -240,12 +248,11 @@ export default async function BookDetailsPage({ params }) {
       </div>
 
       {/* Reviews Section */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-white/6 pt-12 pb-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-white/10 pt-12 pb-20">
         <ReviewsSection
           bookId={bookId}
           currentUser={currentUser}
           hasPurchased={hasPurchased}
-          reviews={book?.reviews || []}
         />
       </div>
     </div>

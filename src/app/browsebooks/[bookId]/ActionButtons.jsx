@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Heart,
@@ -12,6 +12,7 @@ import {
   Loader2,
   Clock,
   AlertTriangle,
+  HeartOff
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -22,8 +23,9 @@ import {
   handleEditBookAction,
 } from '@/lib/actions/book';
 import EditBookModal from '@/components/dashboardrelated/librarianrelated/EditBookModal';
+import { addToWishlist, removeFromWishlist, checkWishlist } from '@/lib/api/wishlist';
 
-// ✅ Delete Confirmation Modal
+// Delete Confirmation Modal
 function DeleteConfirmModal({ isOpen, onClose, onConfirm, bookTitle }) {
   if (!isOpen) return null;
 
@@ -86,8 +88,10 @@ export default function ActionButtons({
   const [showEditModal, setShowEditModal] = useState(false);
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
 
-  // ✅ Form data state
+  // Form data state
   const [formData, setFormData] = useState({
     title: book?.title || '',
     author: book?.author || '',
@@ -98,16 +102,70 @@ export default function ActionButtons({
     coverImage: book?.coverImage || '',
   });
 
-  // ✅ Status checks
+  // Status checks
   const isAvailable = status === 'Published' || status === 'Available';
-  const isCheckedOut =
-    status === 'Checked Out' ||
-    status === 'Pending Delivery' ||
-    status === 'Pending';
+  const isCheckedOut = status === 'Checked Out' || status === 'Pending Delivery' || status === 'Pending';
   const isPendingApproval = status === 'Pending Approval';
   const isUnpublished = status === 'Unpublished';
 
-  // ✅ Handle Stripe Checkout
+  // ✅ Check if book is in wishlist
+  useEffect(() => {
+    const checkWishlistStatus = async () => {
+      if (currentUser?.email && bookId) {
+        try {
+          const result = await checkWishlist(currentUser.email, bookId);
+          if (result?.success) {
+            setIsInWishlist(result.inWishlist);
+          }
+        } catch (error) {
+          console.error('Check wishlist error:', error);
+        }
+      }
+    };
+    checkWishlistStatus();
+  }, [currentUser?.email, bookId]);
+
+  // ✅ Handle Wishlist Toggle
+  const handleWishlistToggle = async () => {
+    if (!currentUser) {
+      toast.error('Please login to add to wishlist');
+      router.push('/auth/login');
+      return;
+    }
+
+    setWishlistLoading(true);
+    try {
+      if (isInWishlist) {
+        const result = await removeFromWishlist(currentUser.email, bookId);
+        if (result?.success) {
+          setIsInWishlist(false);
+          toast.success('Removed from wishlist');
+        } else {
+          toast.error(result?.message || 'Failed to remove from wishlist');
+        }
+      } else {
+        const result = await addToWishlist(
+          currentUser.email,
+          currentUser.id,
+          bookId,
+          book?.title || 'Unknown Book'
+        );
+        if (result?.success) {
+          setIsInWishlist(true);
+          toast.success('Added to wishlist!');
+        } else {
+          toast.error(result?.message || 'Failed to add to wishlist');
+        }
+      }
+    } catch (error) {
+      console.error('Wishlist error:', error);
+      toast.error('Something went wrong');
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
+
+  // Handle Stripe Checkout
   const handleStripeCheckout = async () => {
     setIsProcessing(true);
     try {
@@ -118,8 +176,7 @@ export default function ActionButtons({
           bookId,
           title: book?.title || 'Unknown Book',
           price: book?.price !== undefined ? Number(book.price) : 0,
-          deliveryFee:
-            book?.deliveryFee !== undefined ? Number(book.deliveryFee) : 0,
+          deliveryFee: book?.deliveryFee !== undefined ? Number(book.deliveryFee) : 0,
         }),
       });
       const data = await response.json();
@@ -136,7 +193,7 @@ export default function ActionButtons({
     }
   };
 
-  // ✅ Handle Delete
+  // Handle Delete
   const handleDelete = async () => {
     setShowDeleteModal(false);
     try {
@@ -153,7 +210,7 @@ export default function ActionButtons({
     }
   };
 
-  // ✅ Handle Publish/Unpublish Toggle
+  // Handle Publish/Unpublish Toggle
   const handleToggleStatus = async () => {
     if (isPendingApproval) {
       toast.error('Pending approval books cannot be published');
@@ -165,7 +222,7 @@ export default function ActionButtons({
       const result = await handleToggleBookStatusAction(bookId, status);
       if (result?.success) {
         toast.success(
-          `Book ${result.newStatus === 'Published' ? 'Published' : 'Unpublished'} successfully!`,
+          `Book ${result.newStatus === 'Published' ? 'Published' : 'Unpublished'} successfully!`
         );
         router.refresh();
       } else {
@@ -179,7 +236,7 @@ export default function ActionButtons({
     }
   };
 
-  // ✅ Handle Edit Submit - Server Action ব্যবহার করে
+  // Handle Edit Submit
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     setEditLoading(true);
@@ -194,12 +251,7 @@ export default function ActionButtons({
         coverImage: formData.coverImage || book?.coverImage || '',
       };
 
-      console.log('📤 Sending update via Server Action:', updateData);
-
-      // ✅ Server Action ব্যবহার করো
       const result = await handleEditBookAction(bookId, updateData);
-
-      console.log('📥 Server action result:', result);
 
       if (result.success) {
         toast.success('Book updated successfully!');
@@ -209,7 +261,7 @@ export default function ActionButtons({
         toast.error(result.error || 'Failed to update book');
       }
     } catch (error) {
-      console.error('❌ Update Error:', error);
+      console.error('Update Error:', error);
       toast.error(error.message || 'Something went wrong');
     } finally {
       setEditLoading(false);
@@ -225,19 +277,20 @@ export default function ActionButtons({
             Login to Request Delivery
           </button>
         </Link>
-        <button className="flex items-center justify-center gap-2 border border-white/[0.08] bg-white/[0.02] hover:bg-white/5 text-white font-semibold py-3 px-6 rounded-xl text-sm transition-colors">
-          <Heart size={16} className="text-[#8890B5]" />
-          Add to Wishlist
-        </button>
+        <Link href="/auth/login" className="flex-1 sm:flex-none">
+          <button className="flex items-center justify-center gap-2 w-full sm:w-auto border border-white/[0.08] bg-white/[0.02] hover:bg-white/5 text-white font-semibold py-3 px-6 rounded-xl text-sm transition-colors">
+            <Heart size={16} className="text-[#8890B5]" />
+            Add to Wishlist
+          </button>
+        </Link>
       </div>
     );
   }
 
-  // ✅ Condition 2: Librarian who owns this book — show management controls
+  // ✅ Condition 2: Librarian who owns this book
   if (isLibrarianOwner) {
     return (
       <div className="space-y-4 w-full">
-        {/* Delete Confirmation Modal */}
         <DeleteConfirmModal
           isOpen={showDeleteModal}
           onClose={() => setShowDeleteModal(false)}
@@ -245,7 +298,6 @@ export default function ActionButtons({
           bookTitle={book?.title || 'this book'}
         />
 
-        {/* Edit Modal */}
         <EditBookModal
           isOpen={showEditModal}
           onClose={() => setShowEditModal(false)}
@@ -267,7 +319,6 @@ export default function ActionButtons({
             Librarian Controls
           </p>
           <div className="grid grid-cols-3 gap-2">
-            {/* ✅ Edit Button */}
             <button
               onClick={() => setShowEditModal(true)}
               className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs font-bold hover:bg-white/[0.08] text-white transition-colors"
@@ -275,7 +326,6 @@ export default function ActionButtons({
               <Edit3 size={14} className="text-blue-400" /> Edit
             </button>
 
-            {/* ✅ Publish/Unpublish Button */}
             <button
               onClick={handleToggleStatus}
               disabled={isPendingApproval || isTogglingStatus}
@@ -286,9 +336,6 @@ export default function ActionButtons({
                     ? 'bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20'
                     : 'bg-amber-500/10 border border-amber-500/20 text-amber-400 hover:bg-amber-500/20'
               }`}
-              title={
-                isPendingApproval ? 'Pending approval - cannot publish' : ''
-              }
             >
               {isTogglingStatus ? (
                 <Loader2 size={14} className="animate-spin" />
@@ -307,7 +354,6 @@ export default function ActionButtons({
               )}
             </button>
 
-            {/* ✅ Delete Button */}
             <button
               onClick={() => setShowDeleteModal(true)}
               className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg bg-red-500/10 border border-red-500/20 text-xs font-bold hover:bg-red-500/20 text-red-400 transition-colors"
@@ -316,7 +362,6 @@ export default function ActionButtons({
             </button>
           </div>
 
-          {/* ✅ Status Badge */}
           <div className="flex items-center gap-2 pt-2 border-t border-white/[0.04]">
             <span className="text-[10px] text-[#8890B5]">Status:</span>
             <span
@@ -338,7 +383,7 @@ export default function ActionButtons({
     );
   }
 
-  // ✅ Condition 3: Regular user viewing another librarian's book
+  // ✅ Condition 3: Regular user
   return (
     <div className="flex flex-col sm:flex-row gap-4 w-full">
       {isAvailable ? (
@@ -377,9 +422,29 @@ export default function ActionButtons({
         </button>
       )}
 
-      <button className="flex items-center justify-center gap-2 border border-white/[0.08] bg-white/[0.02] hover:bg-white/5 text-white font-semibold py-3 px-6 rounded-xl text-sm transition-colors">
-        <Heart size={16} className="text-[#8890B5]" />
-        Add to Wishlist
+      {/* ✅ Wishlist Button - Active toggle */}
+      <button
+        onClick={handleWishlistToggle}
+        disabled={wishlistLoading}
+        className={`flex items-center justify-center gap-2 border px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
+          isInWishlist
+            ? 'bg-[#6D4AFF]/20 border-[#6D4AFF]/40 text-[#A78BFA] hover:bg-[#6D4AFF]/30'
+            : 'border-white/[0.08] bg-white/[0.02] hover:bg-white/5 text-white'
+        } disabled:opacity-50`}
+      >
+        {wishlistLoading ? (
+          <Loader2 size={16} className="animate-spin" />
+        ) : isInWishlist ? (
+          <>
+            <Heart size={16} className="fill-[#A78BFA] text-[#A78BFA]" />
+            In Wishlist
+          </>
+        ) : (
+          <>
+            <Heart size={16} className="text-[#8890B5]" />
+            Add to Wishlist
+          </>
+        )}
       </button>
     </div>
   );

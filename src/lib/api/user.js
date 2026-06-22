@@ -11,6 +11,11 @@ export const getUserDeliveries = async (userEmail) => {
   return serverFetch(`/api/user/deliveries?userEmail=${userEmail}`);
 };
 
+// Get User Reading List
+export const getUserReadingList = async (userEmail) => {
+  return serverFetch(`/api/user/reading-list?userEmail=${userEmail}`);
+};
+
 // Cancel an order (only works if status is Pending)
 export const cancelOrder = async (orderId) => {
   return serverMutation(`/api/user/orders/${orderId}/cancel`, null, 'PATCH');
