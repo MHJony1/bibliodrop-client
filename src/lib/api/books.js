@@ -34,7 +34,6 @@ export const getBookById = async (bookId) => {
   }
 };
 
-// GET: Librarian specific books fetch
 
 // GET: Librarian overview
 export const getLibrarianOverview = async (librarianEmail) => {
