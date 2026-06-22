@@ -11,12 +11,27 @@ import {
   ResponsiveContainer,
   Cell,
   ReferenceLine,
+  Area,
+  ComposedChart,
 } from 'recharts';
 import { motion } from 'framer-motion';
 
-const COLORS = ['#6D4AFF', '#7C3AED', '#8B5CF6', '#A78BFA', '#6D4AFF', '#4A2FE8'];
+const COLORS = ['#6D4AFF', '#7C3AED', '#8B5CF6', '#A78BFA', '#6D4AFF', '#4A2FE8', '#5B21B6', '#7C3AED', '#8B5CF6', '#A78BFA', '#6D4AFF', '#4A2FE8'];
 
 export default function UserOverviewChart({ data = [] }) {
+  // ✅ Ensure 12 months data
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  
+  // ✅ If data has less than 12 months, pad with zeros
+  const fullData = months.map((month, index) => {
+    const existing = data.find(d => d.month === month);
+    return {
+      month,
+      books: existing?.books || 0,
+      spent: existing?.spent || 0,
+    };
+  });
+
   if (!data || data.length === 0) {
     return (
       <motion.div 
@@ -35,28 +50,40 @@ export default function UserOverviewChart({ data = [] }) {
     );
   }
 
-  const maxValue = Math.max(...data.map(item => item.books), 1);
-  const totalBooks = data.reduce((sum, item) => sum + item.books, 0);
+  const maxValue = Math.max(...fullData.map(item => item.books), 1);
+  const totalBooks = fullData.reduce((sum, item) => sum + item.books, 0);
+  const totalSpent = fullData.reduce((sum, item) => sum + (item.spent || 0), 0);
+  const activeMonths = fullData.filter(item => item.books > 0).length;
 
-  // ✅ Custom Tooltip Component (ভিতরে define করো)
+  // ✅ Custom Tooltip
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
+      const data = payload[0].payload;
       return (
-        <div className="bg-[#0D1033] border border-[#6D4AFF]/30 rounded-xl px-4 py-3 shadow-2xl shadow-[#6D4AFF]/10 backdrop-blur-xl">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="bg-[#0D1033] border border-[#6D4AFF]/30 rounded-xl px-4 py-3 shadow-2xl shadow-[#6D4AFF]/10 backdrop-blur-xl min-w-[120px]"
+        >
           <p className="text-xs text-[#8890B5] font-medium">{label}</p>
           <p className="text-lg font-bold text-white mt-1">
-            {payload[0].value} <span className="text-xs font-normal text-[#8890B5]">books</span>
+            {data.books} <span className="text-xs font-normal text-[#8890B5]">books</span>
           </p>
-          {payload[0].value > 0 && (
+          {data.spent > 0 && (
+            <p className="text-xs text-emerald-400 mt-0.5">
+              ${data.spent.toFixed(2)} spent
+            </p>
+          )}
+          {data.books > 0 && (
             <div className="w-full h-0.5 bg-gradient-to-r from-[#6D4AFF] to-transparent mt-2" />
           )}
-        </div>
+        </motion.div>
       );
     }
     return null;
   };
 
-  // ✅ Custom Label Component
+  // ✅ Custom Label
   const CustomizedLabel = (props) => {
     const { x, y, width, value } = props;
     if (value === 0) return null;
@@ -78,35 +105,35 @@ export default function UserOverviewChart({ data = [] }) {
   return (
     <div className="w-full">
       {/* Chart Header with Stats */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-6">
-          <div>
-            <p className="text-xs text-[#8890B5] font-medium">Total Books Read</p>
-            <p className="text-2xl font-bold text-white">{totalBooks}</p>
-          </div>
-          <div className="h-10 w-px bg-white/[0.06]" />
-          <div>
-            <p className="text-xs text-[#8890B5] font-medium">Average per Month</p>
-            <p className="text-2xl font-bold text-white">
-              {(totalBooks / data.length).toFixed(1)}
-            </p>
-          </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div className="bg-[#0D1033]/40 rounded-xl p-3 border border-white/[0.04]">
+          <p className="text-[10px] text-[#8890B5] font-medium uppercase tracking-wider">Total Books</p>
+          <p className="text-xl font-bold text-white mt-0.5">{totalBooks}</p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-[#8890B5]">
-          <span className="w-3 h-3 rounded-full bg-gradient-to-r from-[#6D4AFF] to-[#A78BFA]" />
-          Books Read
+        <div className="bg-[#0D1033]/40 rounded-xl p-3 border border-white/[0.04]">
+          <p className="text-[10px] text-[#8890B5] font-medium uppercase tracking-wider">Total Spent</p>
+          <p className="text-xl font-bold text-emerald-400 mt-0.5">${totalSpent.toFixed(2)}</p>
+        </div>
+        <div className="bg-[#0D1033]/40 rounded-xl p-3 border border-white/[0.04]">
+          <p className="text-[10px] text-[#8890B5] font-medium uppercase tracking-wider">Active Months</p>
+          <p className="text-xl font-bold text-[#A78BFA] mt-0.5">{activeMonths} / 12</p>
+        </div>
+        <div className="bg-[#0D1033]/40 rounded-xl p-3 border border-white/[0.04]">
+          <p className="text-[10px] text-[#8890B5] font-medium uppercase tracking-wider">Avg Monthly</p>
+          <p className="text-xl font-bold text-white mt-0.5">{(totalBooks / 12).toFixed(1)}</p>
         </div>
       </div>
 
       {/* Chart */}
-      <ResponsiveContainer width="100%" height={240}>
-        <BarChart 
-          data={data} 
+      <ResponsiveContainer width="100%" height={260}>
+        <ComposedChart 
+          data={fullData} 
           margin={{ top: 20, right: 10, left: -10, bottom: 0 }}
-          barGap={8}
+          barGap={4}
         >
           <defs>
-            {data.map((entry, index) => (
+            {/* Bar Gradients */}
+            {fullData.map((entry, index) => (
               <linearGradient 
                 key={`gradient-${index}`} 
                 id={`barGradient-${index}`}
@@ -124,6 +151,12 @@ export default function UserOverviewChart({ data = [] }) {
                 />
               </linearGradient>
             ))}
+
+            {/* Area Gradient */}
+            <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#6D4AFF" stopOpacity={0.3} />
+              <stop offset="100%" stopColor="#6D4AFF" stopOpacity={0} />
+            </linearGradient>
           </defs>
 
           <CartesianGrid 
@@ -135,12 +168,13 @@ export default function UserOverviewChart({ data = [] }) {
           <XAxis 
             dataKey="month" 
             stroke="#8890B5" 
-            fontSize={12}
+            fontSize={11}
             fontWeight="500"
             axisLine={false}
             tickLine={false}
             tick={{ fill: '#8890B5' }}
             dy={10}
+            interval={0}
           />
           
           <YAxis 
@@ -154,26 +188,35 @@ export default function UserOverviewChart({ data = [] }) {
             dx={-5}
           />
           
-          {/* ✅ Tooltip - সঠিকভাবে */}
           <Tooltip content={<CustomTooltip />} cursor={false} />
           
-          {/* ✅ ReferenceLine - সঠিকভাবে */}
           <ReferenceLine 
             y={0} 
             stroke="rgba(255,255,255,0.05)" 
             strokeWidth={1}
           />
 
-          {/* ✅ Bar - সঠিকভাবে */}
+          {/* Area line for trend */}
+          <Area
+            type="monotone"
+            dataKey="books"
+            stroke="#6D4AFF"
+            strokeWidth={2}
+            fill="url(#areaGradient)"
+            dot={{ fill: '#6D4AFF', r: 4, strokeWidth: 0 }}
+            activeDot={{ r: 6, fill: '#A78BFA' }}
+          />
+
+          {/* Bars */}
           <Bar 
             dataKey="books" 
             radius={[6, 6, 0, 0]}
-            barSize={32}
+            barSize={24}
             label={<CustomizedLabel />}
             animationDuration={800}
             animationBegin={200}
           >
-            {data.map((entry, index) => (
+            {fullData.map((entry, index) => (
               <Cell 
                 key={`cell-${index}`} 
                 fill={`url(#barGradient-${index})`}
@@ -181,7 +224,7 @@ export default function UserOverviewChart({ data = [] }) {
               />
             ))}
           </Bar>
-        </BarChart>
+        </ComposedChart>
       </ResponsiveContainer>
 
       {/* Chart Footer */}
@@ -195,9 +238,13 @@ export default function UserOverviewChart({ data = [] }) {
             <span className="w-2 h-2 rounded-full bg-[#6D4AFF]/30" />
             Inactive
           </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-4 h-0.5 bg-[#6D4AFF]" />
+            Trend Line
+          </span>
         </div>
         <p className="text-[10px] text-[#565C7A] font-mono tracking-wider">
-          {data.length} MONTHS
+          {fullData.length} MONTHS • {activeMonths} ACTIVE
         </p>
       </div>
     </div>

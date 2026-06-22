@@ -3,44 +3,26 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, Lock } from 'lucide-react';
+import { ArrowRight, BookOpen, Clock, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function BookCard({ book, index = 0 }) {
-  const isAvailable = book?.status === 'Published';
+  const isAvailable = book?.status === 'Published' || book?.status === 'Available';
+  const isCheckedOut =
+    book?.status === 'Checked Out' ||
+    book?.status === 'Pending Delivery' ||
+    book?.status === 'Pending';
+
   const bookId = book?._id?.toString() || book?._id;
 
   const categoryColors = {
-    romance: {
-      bg: 'bg-rose-500/15',
-      text: 'text-rose-300',
-      border: 'border-rose-500/20',
-    },
-    academic: {
-      bg: 'bg-blue-500/15',
-      text: 'text-blue-300',
-      border: 'border-blue-500/20',
-    },
-    biography: {
-      bg: 'bg-amber-500/15',
-      text: 'text-amber-300',
-      border: 'border-amber-500/20',
-    },
-    fiction: {
-      bg: 'bg-violet-500/15',
-      text: 'text-violet-300',
-      border: 'border-violet-500/20',
-    },
-    science: {
-      bg: 'bg-emerald-500/15',
-      text: 'text-emerald-300',
-      border: 'border-emerald-500/20',
-    },
-    history: {
-      bg: 'bg-orange-500/15',
-      text: 'text-orange-300',
-      border: 'border-orange-500/20',
-    },
+    romance:   { bg: 'bg-rose-500/15',    text: 'text-rose-300',    border: 'border-rose-500/20'    },
+    academic:  { bg: 'bg-blue-500/15',    text: 'text-blue-300',    border: 'border-blue-500/20'    },
+    biography: { bg: 'bg-amber-500/15',   text: 'text-amber-300',   border: 'border-amber-500/20'   },
+    fiction:   { bg: 'bg-violet-500/15',  text: 'text-violet-300',  border: 'border-violet-500/20'  },
+    science:   { bg: 'bg-emerald-500/15', text: 'text-emerald-300', border: 'border-emerald-500/20' },
+    history:   { bg: 'bg-orange-500/15',  text: 'text-orange-300',  border: 'border-orange-500/20'  },
+    mystery:   { bg: 'bg-purple-500/15',  text: 'text-purple-300',  border: 'border-purple-500/20'  },
   };
 
   const catKey = (book?.category || '').toLowerCase();
@@ -70,16 +52,13 @@ export default function BookCard({ book, index = 0 }) {
           transition={{ duration: 0.25, ease: 'easeOut' }}
           className="relative rounded-2xl overflow-hidden flex flex-col h-full bg-[#0D1033] border border-white/[0.07] hover:border-[#6C47FF]/50 hover:shadow-[0_0_40px_-8px_rgba(108,71,255,0.35)] transition-all duration-300 ease-out"
         >
-          {/* Spine accent bar */}
+          {/* Left accent line on hover */}
           <span className="absolute left-0 top-0 bottom-0 w-0.5 bg-linear-to-b from-[#6C47FF] via-[#9B7AFF] to-[#6C47FF]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 rounded-l-2xl" />
 
           {/* Cover Image */}
           <div className="relative w-full aspect-square overflow-hidden bg-[#080C24]">
             <Image
-              src={
-                book?.coverImage ||
-                'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400'
-              }
+              src={book?.coverImage || 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400'}
               alt={book?.title || 'Book Cover'}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -88,7 +67,7 @@ export default function BookCard({ book, index = 0 }) {
 
             <div className="absolute inset-0 bg-linear-to-t from-[#0D1033] via-[#0D1033]/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
 
-            {/* Category badge */}
+            {/* Category badge — top left */}
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -96,16 +75,14 @@ export default function BookCard({ book, index = 0 }) {
               transition={{ delay: (index % 4) * 0.1 + 0.2, duration: 0.4 }}
               className="absolute top-3 left-3 z-10"
             >
-              <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest border backdrop-blur-sm ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}
-              >
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-widest border backdrop-blur-sm ${catStyle.bg} ${catStyle.text} ${catStyle.border}`}>
                 <BookOpen size={8} />
                 {book?.category || 'General'}
               </span>
             </motion.div>
 
-            {/* Unavailable badge */}
-            {!isAvailable && (
+            {/* Checked Out badge — top right */}
+            {isCheckedOut && (
               <motion.div
                 initial={{ opacity: 0, x: 10 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -114,18 +91,25 @@ export default function BookCard({ book, index = 0 }) {
                 className="absolute top-3 right-3 z-10"
               >
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-900/60 text-red-300 border border-red-500/25 backdrop-blur-sm">
-                  <Lock size={8} />
-                  Unavailable
+                  <Clock size={8} />
+                  Checked Out
                 </span>
               </motion.div>
             )}
 
-            {/* Desktop CTA */}
+            {/* Desktop hover CTA */}
             <div className="hidden lg:block absolute inset-x-0 bottom-0 z-10 px-4 pb-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
-              <div className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-[#6C47FF] hover:bg-[#7A58FF] text-white text-xs font-bold tracking-wide shadow-[0_0_24px_rgba(108,71,255,0.5)] transition-colors">
-                {isAvailable ? 'Reserve this Book' : 'View Details'}
-                <ArrowRight size={13} />
-              </div>
+              {isAvailable ? (
+                <div className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-white text-xs font-bold tracking-wide bg-[#6C47FF] hover:bg-[#7A58FF] shadow-[0_0_24px_rgba(108,71,255,0.5)] transition-colors">
+                  Reserve this Book
+                  <ArrowRight size={13} />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-white text-xs font-bold tracking-wide bg-[#6C47FF] hover:bg-[#7A58FF] shadow-[0_0_24px_rgba(108,71,255,0.5)] transition-colors">
+                  <Eye size={13} />
+                  View Details
+                </div>
+              )}
             </div>
           </div>
 
@@ -149,6 +133,7 @@ export default function BookCard({ book, index = 0 }) {
                 </span>
               </p>
 
+              {/* Price + availability status */}
               <div className="flex items-center justify-between pt-2 mt-1 border-t border-white/5">
                 <div className="flex items-baseline gap-0.5">
                   <span className="text-[9px] text-[#F5C842] font-bold">$</span>
@@ -157,13 +142,9 @@ export default function BookCard({ book, index = 0 }) {
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${isAvailable ? 'bg-emerald-400' : 'bg-red-400'}`}
-                  />
-                  <span
-                    className={`text-[9px] font-semibold ${isAvailable ? 'text-emerald-400' : 'text-red-400'}`}
-                  >
-                    {isAvailable ? 'Available' : 'Checked Out'}
+                  <span className={`w-1.5 h-1.5 rounded-full ${isAvailable ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                  <span className={`text-[9px] font-semibold ${isAvailable ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {isAvailable ? 'Available' : 'Unavailable'}
                   </span>
                 </div>
               </div>
@@ -171,15 +152,17 @@ export default function BookCard({ book, index = 0 }) {
 
             {/* Mobile CTA */}
             <div className="block lg:hidden w-full mt-2">
-              <div
-                className={`flex items-center justify-center gap-1.5 w-full py-2 rounded-xl text-[11px] font-bold tracking-wide text-white transition-colors ${isAvailable ? 'bg-[#6C47FF] shadow-[0_4px_12px_rgba(108,71,255,0.2)]' : 'bg-white/10 border border-white/10 text-gray-400'}`}
-              >
-                {isAvailable ? 'Reserve Book' : 'View Details'}
-                <ArrowRight
-                  size={12}
-                  className={isAvailable ? 'text-white' : 'text-gray-500'}
-                />
-              </div>
+              {isAvailable ? (
+                <div className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl text-[11px] font-bold tracking-wide text-white bg-[#6C47FF] shadow-[0_4px_12px_rgba(108,71,255,0.2)] transition-colors">
+                  Reserve Book
+                  <ArrowRight size={12} className="text-white" />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl text-[11px] font-bold tracking-wide text-white bg-[#6C47FF] shadow-[0_4px_12px_rgba(108,71,255,0.2)] transition-colors">
+                  <Eye size={12} />
+                  View Details
+                </div>
+              )}
             </div>
           </motion.div>
         </motion.div>

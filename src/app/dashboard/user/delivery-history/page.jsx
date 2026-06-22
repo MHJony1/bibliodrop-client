@@ -159,7 +159,7 @@ export default function DeliveryHistoryPage() {
       </div>
 
       {/* Table */}
-      <DeliveryHistoryTable deliveries={deliveries} loading={loading} />
+      <DeliveryHistoryTable deliveries={deliveries} loading={loading} onRefresh={loadDeliveries} />
     </div>
   );
 }

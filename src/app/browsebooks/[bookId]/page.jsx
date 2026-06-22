@@ -36,20 +36,24 @@ export default async function BookDetailsPage({ params }) {
     );
   }
 
-  // 1. Session check
-  const currentUserId = currentUser?.id || currentUser?._id;
-  const bookOwnerId = book?.userId || book?.ownerId;
+  // ✅ Fixed: email-based librarian owner check (userId match করে না সবসময়)
+  const currentUserEmail = currentUser?.email?.trim().toLowerCase();
+  const bookOwnerEmail = book?.librarianEmail?.trim().toLowerCase();
   const isLibrarianOwner =
-    currentUser?.role === 'librarian' && bookOwnerId === currentUserId;
-  const hasPurchased = book?.buyers?.includes(currentUserId) || false;
+    currentUser?.role === 'librarian' &&
+    currentUserEmail &&
+    bookOwnerEmail &&
+    currentUserEmail === bookOwnerEmail;
 
-  // 2. Price calculation
+  const hasPurchased = book?.buyers?.includes(currentUser?.id) || false;
+
+  // Price calculation
   const bookPrice = book?.price !== undefined ? Number(book.price) : 0;
   const deliveryFee =
     book?.deliveryFee !== undefined ? Number(book.deliveryFee) : 0;
   const totalPayable = bookPrice + deliveryFee;
 
-  // 3. Category color theme
+  // Category color theme
   const categoryColors = {
     romance: 'bg-rose-500/15 text-rose-200 border-rose-500/30',
     academic: 'bg-blue-500/15 text-blue-200 border-blue-500/30',
@@ -65,15 +69,19 @@ export default async function BookDetailsPage({ params }) {
     categoryColors[currentCategory] ||
     'bg-teal-500/15 text-teal-200 border-teal-500/30';
 
-  // 💎 4. Dynamic Status Badges Theme
+  // Dynamic Status Badge Theme
   const statusColors = {
-  'Published': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  'Pending Delivery': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  'Pending Approval': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  'Unpublished': 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-};
- const currentStatus = book?.status || 'Published';
- const statusStyle = statusColors[currentStatus] || 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+    Published: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    'Checked Out': 'bg-red-500/10 text-red-400 border-red-500/20',
+    'Pending Delivery': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    'Pending Approval': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    Unpublished: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+    Available: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  };
+  const currentStatus = book?.status || 'Published';
+  const statusStyle =
+    statusColors[currentStatus] ||
+    'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
 
   const formattedDate = book?.dateAdded
     ? new Date(book.dateAdded).toLocaleDateString('en-US', {
@@ -86,6 +94,7 @@ export default async function BookDetailsPage({ params }) {
   return (
     <div className="min-h-screen bg-linear-to-br from-[#121B3A] via-[#0E152E] to-[#0A0E22] text-[#D1D5DB] antialiased">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 pb-8">
+
         {/* Back navigation */}
         <div className="mb-8">
           <Link
@@ -102,6 +111,7 @@ export default async function BookDetailsPage({ params }) {
 
         {/* Showcase Layout Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-14 items-center">
+
           {/* Left Side: Image Showcase */}
           <div className="w-full flex justify-center md:justify-start">
             <div className="relative w-full max-w-107.5 md:max-w-112.5 aspect-square rounded-[2rem] overflow-hidden bg-[#16224F]/40 border border-white/8 shadow-[0_20px_50px_rgba(0,0,0,0.4)] transition-all duration-300 hover:border-white/15">
@@ -117,7 +127,7 @@ export default async function BookDetailsPage({ params }) {
                 className="object-cover object-center"
               />
 
-              {/* Dynamic Status Badge Indicator */}
+              {/* Dynamic Status Badge */}
               <div className="absolute top-4 right-4 z-10">
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase border backdrop-blur-md ${statusStyle}`}
@@ -179,7 +189,7 @@ export default async function BookDetailsPage({ params }) {
                 </p>
               </div>
 
-              {/* Total Payable Value Panel */}
+              {/* Total Payable */}
               <div className="flex items-center justify-between bg-white/[0.02] -mx-5 -mb-3 p-3 px-5 border-t border-white/[0.05] rounded-b-2xl">
                 <div className="flex items-center gap-2.5">
                   <CreditCard size={16} className="text-indigo-400" />
@@ -193,7 +203,7 @@ export default async function BookDetailsPage({ params }) {
               </div>
             </div>
 
-            {/* Highlighted Meta Info Panel */}
+            {/* Meta Info */}
             <div className="flex flex-wrap gap-3 max-w-md">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs font-medium text-[#B0BBD8]">
                 <User size={14} className="text-indigo-400" />
@@ -215,7 +225,7 @@ export default async function BookDetailsPage({ params }) {
               </div>
             </div>
 
-            {/* Action Buttons Interface */}
+            {/* Action Buttons */}
             <div className="max-w-md pt-1">
               <ActionButtons
                 bookId={bookId}
@@ -229,7 +239,7 @@ export default async function BookDetailsPage({ params }) {
         </div>
       </div>
 
-      {/* Reviews Block */}
+      {/* Reviews Section */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-white/6 pt-12 pb-20">
         <ReviewsSection
           bookId={bookId}
