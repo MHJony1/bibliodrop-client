@@ -44,8 +44,8 @@ Readers can browse curated collections, pay delivery fees via Stripe, and track 
 | Resource | URL |
 |---|---|
 | 🌐 Live Website | [https://bibliodrop-client-nu.vercel.app](https://bibliodrop-client-nu.vercel.app) |
-| 🖥️ Client Repository | [GitHub — Client](https://github.com/your-username/bibliodrop-client) |
-| ⚙️ Server Repository | [GitHub — Server](https://github.com/your-username/bibliodrop-server) |
+| 🖥️ Client Repository | [GitHub — Client](https://github.com/MHJony1/bibliodrop-client) |
+| ⚙️ Server Repository | [GitHub — Server](https://github.com/MHJony1/bibliodrop-server) |
 
 ---
 
@@ -187,8 +187,7 @@ bibliodrop-client/
 │   │
 │   └── 📁 lib/                               # Auth config, API helpers, utils
 │
-├── .env.local                                # 🔒 Environment variables (never commit)
-├── .gitignore
+├── .env.local                               
 ├── eslint.config.mjs
 ├── jsconfig.json
 ├── next.config.mjs
