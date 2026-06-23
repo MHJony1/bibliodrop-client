@@ -5,14 +5,10 @@ import AdminStats from '@/components/dashboardrelated/adminrelated/AdminStats';
 import CategoryChart from '@/components/dashboardrelated/adminrelated/CategoryChart';
 import RevenueChart from '@/components/dashboardrelated/adminrelated/RevenueChart';
 import { Shield, Activity, Zap, TrendingUp } from 'lucide-react';
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
-import { getTokenServer } from '@/lib/core/token';
 
 export default async function AdminDashboard() {
   const sessionUser = await requireRole('admin');
   const overviewResponse = await getAdminOverview();
-  const token = await getTokenServer();
 
   const metricsData = overviewResponse?.metrics || {
     totalUsers: 0,
