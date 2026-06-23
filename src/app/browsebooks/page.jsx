@@ -1,13 +1,14 @@
 import React from 'react';
 import { getBooks } from '@/lib/api/books';
-import { Library } from 'lucide-react';
+import { Library, BookOpen, Sparkles } from 'lucide-react';
 import FilterBar from '@/components/booksrelated/FilterBar';
 import BookCard from '@/components/booksrelated/BookCard';
 import Pagination from '@/components/booksrelated/Pagination';
 
 export const metadata = {
-  title: "Browse Books",
-  description: "Explore our curated collection of premium books from local libraries.",
+  title: 'Browse Books | BiblioDrop',
+  description:
+    'Explore our curated collection of premium books from local libraries.',
 };
 
 export default async function BrowseBooksPage({ searchParams }) {
@@ -52,88 +53,96 @@ export default async function BrowseBooksPage({ searchParams }) {
   const showingTo = showingFrom + showingCount - 1;
 
   return (
-    <div className="min-h-screen bg-[#070B1E] text-white pt-28 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#070B1E] text-white pt-20 sm:pt-24 pb-16 sm:pb-20 px-3 sm:px-6 lg:px-8 relative overflow-x-hidden">
+      {/* Background Effects - Soft & Premium */}
       <div
         className="pointer-events-none absolute inset-0 overflow-hidden"
         aria-hidden
       >
-        <div className="absolute -top-32 right-0 w-175 h-[700px] bg-[#6C47FF]/6 rounded-full blur-[160px]" />
-        <div className="absolute bottom-0 -left-48 w-[600px] h-[600px] bg-[#4A2FE8]/5 rounded-full blur-[140px]" />
-        <div className="absolute top-28 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#6C47FF]/20 to-transparent" />
+        <div className="absolute -top-32 right-0 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-[#6C47FF]/4 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 -left-32 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-[#4A2FE8]/3 rounded-full blur-[100px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#8B5CF6]/2 rounded-full blur-[150px]" />
       </div>
 
-      <div className="max-w-[1200px] mx-auto relative z-10">
-        <div className="mb-10">
-          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full border border-[#6C47FF]/25 bg-[#6C47FF]/8 backdrop-blur-sm">
-            <Library size={11} className="text-[#A78BFA]" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#A78BFA]">
+      <div className="max-w-[1200px] mx-auto relative z-10 w-full">
+        {/* ===== HEADER ===== */}
+        <div className="mb-8 sm:mb-10">
+          <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full border border-[#6C47FF]/20 bg-[#6C47FF]/5 backdrop-blur-sm">
+            <Sparkles size={10} className="text-[#A78BFA]" />
+            <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.15em] text-[#A78BFA]">
               Premium Library
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight mb-3">
-            Browse{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#A78BFA] to-[#6C47FF]">
-              Books
-            </span>
-          </h1>
-          {totalBooks > 0 ? (
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.04] border border-white/[0.06]">
-                <span className="text-[11px] text-[#8890B5]">
-                  Total in library:
+
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+            <div>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                Browse{' '}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#A78BFA] to-[#6C47FF]">
+                  Books
                 </span>
-                <span className="text-[11px] font-bold text-white">
-                  {totalBooks} books
-                </span>
-              </div>
-              <span className="w-1 h-1 rounded-full bg-[#3A3F5C]" />
-              <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#6C47FF]/10 border border-[#6C47FF]/20">
-                <span className="text-[11px] text-[#A78BFA]">Showing:</span>
-                <span className="text-[11px] font-bold text-white">
-                  {showingFrom}–{showingTo} of {totalBooks}
-                </span>
-                <span className="text-[11px] text-[#8890B5]">
-                  (page {currentPage}/{totalPages})
-                </span>
-              </div>
+              </h1>
+              <p className="text-xs sm:text-sm text-[#8890B5] mt-0.5">
+                Discover your next great read from our curated collection
+              </p>
             </div>
-          ) : (
-            <p className="text-sm text-[#8890B5]">
-              No books found matching your filters.
-            </p>
-          )}
+
+            {totalBooks > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg bg-white/[0.03] border border-white/[0.05]">
+                  <Library size={12} className="text-[#8890B5]" />
+                  <span className="text-[10px] sm:text-[11px] text-[#8890B5]">
+                    <span className="text-white font-bold">{totalBooks}</span>{' '}
+                    books
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg bg-[#6C47FF]/8 border border-[#6C47FF]/15">
+                  <BookOpen size={12} className="text-[#A78BFA]" />
+                  <span className="text-[10px] sm:text-[11px] text-[#A78BFA]">
+                    {showingFrom}–{showingTo}{' '}
+                    <span className="hidden xs:inline">of</span> {totalBooks}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="mb-8">
+        {/* ===== FILTER BAR ===== */}
+        <div className="mb-6">
           <FilterBar />
         </div>
 
+        {/* ===== BOOKS GRID ===== */}
         {books.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 rounded-2xl border border-dashed border-white/[0.07] bg-[#0D1033]/40 text-center">
-            <Library size={32} className="text-[#6C47FF]/40 mb-4" />
-            <p className="text-[#8890B5] text-sm font-medium mb-1">
-              No books match your filters.
-            </p>
-            <p className="text-[#565C7A] text-xs">
-              Try adjusting your search or clearing filters.
+          <div className="flex flex-col items-center justify-center py-16 sm:py-20 rounded-2xl border border-dashed border-white/[0.06] bg-[#0D1033]/20 text-center">
+            <div className="p-4 rounded-full bg-[#6C47FF]/8 border border-[#6C47FF]/15 mb-4">
+              <Library size={32} className="text-[#6C47FF]/30" />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold text-white mb-1">
+              No books found
+            </h3>
+            <p className="text-xs sm:text-sm text-[#8890B5] max-w-sm">
+              Try adjusting your search or filters to find what you&apos;re
+              looking for.
             </p>
           </div>
         ) : (
           <>
-            {/* <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-              {books.map((book) => (
-                <BookCard key={book._id?.$oid || book._id || book.id} book={book} />
-              ))}
-            </div> */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
-              {books.map((book) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 w-full">
+              {books.map((book, index) => (
                 <BookCard
-                  key={book._id?.$oid || book._id || book.id}
+                  key={book._id?.$oid || book._id || book.id || index}
                   book={book}
+                  index={index}
                 />
               ))}
             </div>
-            <Pagination totalPages={totalPages} currentPage={currentPage} />
+
+            {/* ===== PAGINATION ===== */}
+            {totalPages > 1 && (
+              <Pagination totalPages={totalPages} currentPage={currentPage} />
+            )}
           </>
         )}
       </div>
