@@ -52,7 +52,7 @@ const stats = [
   },
 ];
 
-// কাউন্ট-আপ হুক (Ease Out Cubic)
+//  (Ease Out Cubic)
 function useCountUp(target, duration = 2000, enabled = false) {
   const [count, setCount] = useState(0);
   useEffect(() => {
@@ -94,7 +94,6 @@ function StatCard({ stat, index }) {
       whileHover={{ y: -6 }}
       className={`group relative overflow-hidden rounded-2xl border border-white/[0.04] bg-[#090D2E]/40 backdrop-blur-md p-6 sm:p-7 transition-all duration-500 ${stat.borderGlow} hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.7)]`}
     >
-      {/* কার্ডের ভেতরে প্রিমিয়াম রেডিয়াল ব্যাকগ্রাউন্ড লাইটিং */}
       <div
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-750 pointer-events-none mix-blend-screen"
         style={{
@@ -102,7 +101,7 @@ function StatCard({ stat, index }) {
         }}
       />
 
-      {/* টপ সক্ষ্ম লাইটিং লাইন */}
+
       <div
         className="absolute top-0 left-0 right-0 h-[1.5px] opacity-0 group-hover:opacity-100 transition-all duration-500 scale-x-75 group-hover:scale-x-100"
         style={{
@@ -111,7 +110,7 @@ function StatCard({ stat, index }) {
       />
 
       <div className="relative z-10">
-        {/* আইকন বক্স */}
+
         <div
           className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-white/[0.02] border border-white/[0.06] transition-all duration-300 group-hover:scale-105"
           style={{ borderColor: `${stat.color}30` }}
@@ -119,7 +118,6 @@ function StatCard({ stat, index }) {
           <Icon size={20} style={{ color: stat.color }} strokeWidth={2} />
         </div>
 
-        {/* কাউন্টিং নাম্বার */}
         <div
           className="mb-2 text-4xl sm:text-5xl font-black tracking-tight select-none"
           style={{ color: stat.color }}
@@ -127,7 +125,6 @@ function StatCard({ stat, index }) {
           {inView ? `${formatted()}${stat.suffix}` : stat.display}
         </div>
 
-        {/* লেবেল ও ডেসক্রিপশন */}
         <p className="mb-1.5 text-sm font-bold text-white tracking-wide">
           {stat.label}
         </p>
@@ -148,11 +145,11 @@ export default function StatsSection() {
       ref={ref}
       className="relative overflow-hidden bg-[#030712] py-20 lg:py-28 border-b border-white/[0.02]"
     >
-      {/* প্রিমিয়াম ব্যাকগ্রাউন্ড গ্লো লেয়ার */}
+
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_50%,rgba(99,102,241,0.04),transparent)]" />
       <div className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-[#6D4AFF]/[0.03] rounded-full blur-[130px]" />
 
-      {/* এলিগ্যান্ট ডট-গ্রিড টেক্সচার */}
+
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.025]"
         style={{
@@ -214,7 +211,7 @@ export default function StatsSection() {
           </div>
 
           <Link
-            href="/register"
+            href="/auth/register"
             className="group/btn flex items-center justify-center gap-2 shrink-0 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 px-6 py-3.5 text-xs sm:text-sm font-bold text-slate-950 shadow-[0_10px_25px_rgba(245,158,11,0.15)] hover:shadow-[0_15px_30px_rgba(245,158,11,0.3)] hover:scale-[1.01] transition-all duration-300 w-full sm:w-auto"
           >
             Get Started Free
