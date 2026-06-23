@@ -14,6 +14,36 @@ import {
 import ActionButtons from './ActionButtons';
 import ReviewsSection from './ReviewsSection';
 
+export async function generateMetadata({ params }) {  try {
+    const { bookId } = await params;
+    const response = await getBookById(bookId);
+    const book = response?.data || response;
+
+    if (!book) {
+      return {
+        title: "Book Not Found | BiblioDrop",
+        description: "The book you are looking for does not exist.",
+      };
+    }
+
+    return {
+      title: `${book.title} | BiblioDrop`,
+      description: book.description || `Read ${book.title} by ${book.author}`,
+      openGraph: {
+        title: `${book.title} | BiblioDrop`,
+        description: book.description || `Read ${book.title} by ${book.author}`,
+        images: [book.coverImage || '/og-image.png'],
+      },
+    };
+  } catch (error) {
+    console.error('❌ Metadata Error:', error);
+    return {
+      title: "Book Details | BiblioDrop",
+      description: "View book details on BiblioDrop.",
+    };
+  }
+}
+
 export const dynamic = 'force-dynamic';
 
 export default async function BookDetailsPage({ params }) {

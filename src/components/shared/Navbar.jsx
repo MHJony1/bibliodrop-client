@@ -236,7 +236,7 @@ export default function Navbar() {
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-        className={`fixed top-0 left-0 right-0 z-50 h-[72px] flex items-center transition-all duration-500 ${
+        className={`fixed top-0 left-0 right-0 z-50 h-18 flex items-center transition-all duration-500 ${
           scrolled
             ? 'bg-white/90 dark:bg-[#05081F]/90 backdrop-blur-2xl border-b border-black/5 dark:border-white/5 shadow-[0_4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.5)]'
             : 'bg-transparent border-b border-transparent'
@@ -255,7 +255,7 @@ export default function Navbar() {
               <p className="text-[24px] font-extrabold tracking-tight text-gray-900 dark:text-white m-0">
                 Biblio<span className="text-[#6D4AFF]">Drop</span>
               </p>
-              <p className="text-[9px] font-semibold uppercase tracking-[0.14em] mt-0.5 text-gray-500 dark:text-[#B8B8C5] m-0">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-gray-500 dark:text-[#B8B8C5] m-0 mt-1">
                 Books at Your Doorstep
               </p>
             </div>

@@ -5,6 +5,11 @@ import FilterBar from '@/components/booksrelated/FilterBar';
 import BookCard from '@/components/booksrelated/BookCard';
 import Pagination from '@/components/booksrelated/Pagination';
 
+export const metadata = {
+  title: "Browse Books",
+  description: "Explore our curated collection of premium books from local libraries.",
+};
+
 export default async function BrowseBooksPage({ searchParams }) {
   const resolvedParams = await searchParams;
   const LIMIT = 12;

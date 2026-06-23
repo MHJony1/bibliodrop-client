@@ -22,20 +22,24 @@ import toast from 'react-hot-toast';
 import { cancelOrder, deleteOrder } from '@/lib/api/user';
 
 const statusColors = {
-  Pending:   'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  Dispatched:'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  Pending: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+  Dispatched: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
   Delivered: 'bg-green-500/20 text-green-400 border-green-500/30',
   Cancelled: 'bg-red-500/20 text-red-400 border-red-500/30',
 };
 
 const statusIcons = {
-  Pending:   <Clock size={14} />,
-  Dispatched:<Truck size={14} />,
+  Pending: <Clock size={14} />,
+  Dispatched: <Truck size={14} />,
   Delivered: <CheckCircle size={14} />,
   Cancelled: <Package size={14} />,
 };
 
-export default function DeliveryHistoryTable({ deliveries = [], loading = false, onRefresh }) {
+export default function DeliveryHistoryTable({
+  deliveries = [],
+  loading = false,
+  onRefresh,
+}) {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [sortField, setSortField] = useState('date');
@@ -67,7 +71,9 @@ export default function DeliveryHistoryTable({ deliveries = [], loading = false,
         bVal = String(bVal).toLowerCase();
       }
       if (typeof aVal === 'string') {
-        return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        return sortDirection === 'asc'
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
       }
       return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
     });
@@ -128,10 +134,16 @@ export default function DeliveryHistoryTable({ deliveries = [], loading = false,
     >
       <div className="flex items-center gap-1.5">
         {children}
-        <ArrowUpDown size={12} className="opacity-30 group-hover:opacity-100 transition-opacity" />
-        {sortField === field && (
-          sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-        )}
+        <ArrowUpDown
+          size={12}
+          className="opacity-30 group-hover:opacity-100 transition-opacity"
+        />
+        {sortField === field &&
+          (sortDirection === 'asc' ? (
+            <ChevronUp size={14} />
+          ) : (
+            <ChevronDown size={14} />
+          ))}
       </div>
     </th>
   );
@@ -159,7 +171,6 @@ export default function DeliveryHistoryTable({ deliveries = [], loading = false,
 
   return (
     <div className="w-full">
-
       {/* Confirm Modal */}
       <AnimatePresence>
         {confirmModal && (
@@ -176,25 +187,45 @@ export default function DeliveryHistoryTable({ deliveries = [], loading = false,
               className="bg-[#0D1033] border border-white/[0.08] rounded-2xl p-6 w-full max-w-sm shadow-2xl"
             >
               <div className="flex items-center gap-3 mb-4">
-                <div className={`p-2.5 rounded-xl ${confirmModal.type === 'delete' ? 'bg-red-500/10' : 'bg-yellow-500/10'}`}>
-                  {confirmModal.type === 'delete'
-                    ? <Trash2 size={20} className="text-red-400" />
-                    : <XCircle size={20} className="text-yellow-400" />
-                  }
+                <div
+                  className={`p-2.5 rounded-xl ${confirmModal.type === 'delete' ? 'bg-red-500/10' : 'bg-yellow-500/10'}`}
+                >
+                  {confirmModal.type === 'delete' ? (
+                    <Trash2 size={20} className="text-red-400" />
+                  ) : (
+                    <XCircle size={20} className="text-yellow-400" />
+                  )}
                 </div>
                 <div>
                   <h3 className="text-white font-bold text-base">
-                    {confirmModal.type === 'delete' ? 'Delete Order' : 'Cancel Order'}
+                    {confirmModal.type === 'delete'
+                      ? 'Delete Order'
+                      : 'Cancel Order'}
                   </h3>
-                  <p className="text-[#8890B5] text-xs">This action cannot be undone</p>
+                  <p className="text-[#8890B5] text-xs">
+                    This action cannot be undone
+                  </p>
                 </div>
               </div>
 
               <p className="text-sm text-[#C5C9E0] mb-6">
-                {confirmModal.type === 'delete'
-                  ? <>Are you sure you want to permanently delete the order for <span className="text-white font-semibold">&quot;{confirmModal.bookTitle}&quot;</span>?</>
-                  : <>Are you sure you want to cancel the order for <span className="text-white font-semibold">&quot;{confirmModal.bookTitle}&quot;</span>? The book will become available again.</>
-                }
+                {confirmModal.type === 'delete' ? (
+                  <>
+                    Are you sure you want to permanently delete the order for{' '}
+                    <span className="text-white font-semibold">
+                      &quot;{confirmModal.bookTitle}&quot;
+                    </span>
+                    ?
+                  </>
+                ) : (
+                  <>
+                    Are you sure you want to cancel the order for{' '}
+                    <span className="text-white font-semibold">
+                      &quot;{confirmModal.bookTitle}&quot;
+                    </span>
+                    ? The book will become available again.
+                  </>
+                )}
               </p>
 
               <div className="flex gap-3">
@@ -205,14 +236,18 @@ export default function DeliveryHistoryTable({ deliveries = [], loading = false,
                   Keep Order
                 </button>
                 <button
-                  onClick={confirmModal.type === 'delete' ? handleDelete : handleCancel}
+                  onClick={
+                    confirmModal.type === 'delete' ? handleDelete : handleCancel
+                  }
                   className={`flex-1 py-2.5 rounded-xl text-white text-sm font-bold transition-colors ${
                     confirmModal.type === 'delete'
                       ? 'bg-red-500 hover:bg-red-600'
                       : 'bg-yellow-500 hover:bg-yellow-600 text-black'
                   }`}
                 >
-                  {confirmModal.type === 'delete' ? 'Yes, Delete' : 'Yes, Cancel'}
+                  {confirmModal.type === 'delete'
+                    ? 'Yes, Delete'
+                    : 'Yes, Cancel'}
                 </button>
               </div>
             </motion.div>
@@ -223,7 +258,10 @@ export default function DeliveryHistoryTable({ deliveries = [], loading = false,
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8890B5]" size={16} />
+          <Search
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8890B5]"
+            size={16}
+          />
           <input
             type="text"
             value={search}
@@ -246,7 +284,10 @@ export default function DeliveryHistoryTable({ deliveries = [], loading = false,
               <option value="Delivered">✅ Delivered</option>
               <option value="Cancelled">❌ Cancelled</option>
             </select>
-            <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8890B5] pointer-events-none" size={14} />
+            <Filter
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8890B5] pointer-events-none"
+              size={14}
+            />
           </div>
           <span className="text-xs text-[#8890B5] whitespace-nowrap">
             {filteredDeliveries.length} / {deliveries.length} deliveries
@@ -263,7 +304,9 @@ export default function DeliveryHistoryTable({ deliveries = [], loading = false,
               <SortableHeader field="amount">Total Fee</SortableHeader>
               <SortableHeader field="date">Request Date</SortableHeader>
               <SortableHeader field="status">Status</SortableHeader>
-              <SortableHeader field="transactionId">Transaction ID</SortableHeader>
+              <SortableHeader field="transactionId">
+                Transaction ID
+              </SortableHeader>
               <th className="px-4 py-3 text-right text-xs font-bold text-[#8890B5] uppercase tracking-wider">
                 Actions
               </th>
@@ -273,11 +316,18 @@ export default function DeliveryHistoryTable({ deliveries = [], loading = false,
             <AnimatePresence>
               {filteredDeliveries.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="px-4 py-16 text-center text-[#8890B5]">
+                  <td
+                    colSpan="6"
+                    className="px-4 py-16 text-center text-[#8890B5]"
+                  >
                     <div className="flex flex-col items-center gap-3">
                       <Package size={40} className="text-[#6D4AFF]/30" />
-                      <p className="text-sm font-medium">No delivery history found</p>
-                      <p className="text-xs text-[#565C7A]">Start browsing books to place orders</p>
+                      <p className="text-sm font-medium">
+                        No delivery history found
+                      </p>
+                      <p className="text-xs text-[#565C7A]">
+                        Start browsing books to place orders
+                      </p>
                       <Link
                         href="/browsebooks"
                         className="mt-2 px-4 py-2 rounded-xl bg-[#6D4AFF] text-white text-sm font-medium hover:bg-[#5A3AE8] transition-all"
@@ -290,15 +340,25 @@ export default function DeliveryHistoryTable({ deliveries = [], loading = false,
               ) : (
                 filteredDeliveries.map((delivery, index) => {
                   const statusKey = delivery.status || 'Pending';
-                  const statusColor = statusColors[statusKey] || statusColors['Pending'];
-                  const statusIcon = statusIcons[statusKey] || statusIcons['Pending'];
-                  const displayFee = delivery.amount || delivery.totalFee || delivery.amountPaid || 0;
-                  const transactionId = delivery.transactionId || `TXN-${delivery._id?.toString().slice(-8).toUpperCase()}`;
+                  const statusColor =
+                    statusColors[statusKey] || statusColors['Pending'];
+                  const statusIcon =
+                    statusIcons[statusKey] || statusIcons['Pending'];
+                  const displayFee =
+                    delivery.amount ||
+                    delivery.totalFee ||
+                    delivery.amountPaid ||
+                    0;
+                  const transactionId =
+                    delivery.transactionId ||
+                    `TXN-${delivery._id?.toString().slice(-8).toUpperCase()}`;
                   const bookId = delivery.bookId || delivery._id;
                   const viewBookUrl = bookId ? `/browsebooks/${bookId}` : '#';
-                  const isProcessing = processingId === (delivery._id?.toString() || delivery._id);
+                  const isProcessing =
+                    processingId === (delivery._id?.toString() || delivery._id);
                   const canCancel = statusKey === 'Pending';
-                  const canDelete = statusKey === 'Delivered' || statusKey === 'Cancelled';
+                  const canDelete =
+                    statusKey === 'Delivered' || statusKey === 'Cancelled';
 
                   return (
                     <motion.tr
@@ -326,7 +386,12 @@ export default function DeliveryHistoryTable({ deliveries = [], loading = false,
                             <p className="text-sm text-white font-medium line-clamp-1 max-w-[180px]">
                               {delivery.bookTitle || 'Unknown Book'}
                             </p>
-                            <p className="text-xs text-[#8890B5]">by {delivery.author || 'Unknown'}</p>
+                            <p className="text-xs text-[#8890B5]">
+                              by{' '}
+                              {delivery.bookAuthor ||
+                                delivery.author ||
+                                'Unknown'}
+                            </p>
                           </div>
                         </div>
                       </td>
@@ -345,7 +410,9 @@ export default function DeliveryHistoryTable({ deliveries = [], loading = false,
 
                       {/* Status */}
                       <td className="px-4 py-3.5">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${statusColor}`}>
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${statusColor}`}
+                        >
                           {statusIcon}
                           {statusKey}
                         </span>
@@ -361,7 +428,6 @@ export default function DeliveryHistoryTable({ deliveries = [], loading = false,
                       {/* Actions */}
                       <td className="px-4 py-3.5">
                         <div className="flex items-center justify-end gap-2">
-
                           {/* View Book */}
                           <Link
                             href={viewBookUrl}
@@ -382,11 +448,14 @@ export default function DeliveryHistoryTable({ deliveries = [], loading = false,
                             <button
                               title="Cancel Order"
                               disabled={isProcessing}
-                              onClick={() => setConfirmModal({
-                                type: 'cancel',
-                                orderId: delivery._id?.toString() || delivery._id,
-                                bookTitle: delivery.bookTitle || 'this book',
-                              })}
+                              onClick={() =>
+                                setConfirmModal({
+                                  type: 'cancel',
+                                  orderId:
+                                    delivery._id?.toString() || delivery._id,
+                                  bookTitle: delivery.bookTitle || 'this book',
+                                })
+                              }
                               className="p-2 rounded-lg bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20 border border-yellow-500/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                               {isProcessing ? (
@@ -402,11 +471,14 @@ export default function DeliveryHistoryTable({ deliveries = [], loading = false,
                             <button
                               title="Delete Order"
                               disabled={isProcessing}
-                              onClick={() => setConfirmModal({
-                                type: 'delete',
-                                orderId: delivery._id?.toString() || delivery._id,
-                                bookTitle: delivery.bookTitle || 'this book',
-                              })}
+                              onClick={() =>
+                                setConfirmModal({
+                                  type: 'delete',
+                                  orderId:
+                                    delivery._id?.toString() || delivery._id,
+                                  bookTitle: delivery.bookTitle || 'this book',
+                                })
+                              }
                               className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                               {isProcessing ? (
@@ -416,7 +488,6 @@ export default function DeliveryHistoryTable({ deliveries = [], loading = false,
                               )}
                             </button>
                           )}
-
                         </div>
                       </td>
                     </motion.tr>

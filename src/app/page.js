@@ -8,6 +8,11 @@ import PopularCategories from '@/components/homepage/PopularCategories';
 import StatsSection from '@/components/homepage/StasSection';
 import WhyChooseUs from '@/components/homepage/WhyChooseUs';
 
+export const metadata = {
+  title: "Home | BiblioDrop",
+  description: "Your local library, delivered. Browse and borrow books from local libraries.",
+};
+
 export default function Home() {
   return (
     <>
