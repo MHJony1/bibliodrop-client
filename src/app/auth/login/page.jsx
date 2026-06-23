@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense  } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -16,7 +16,7 @@ import { authClient } from '@/lib/auth-client';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
-const LogInPage = () => {
+const LogInContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/';
@@ -34,25 +34,26 @@ const LogInPage = () => {
 
   // ─── 2. ROLE-BASED REDIRECTION FUNCTION (DECLARED FIRST) ───
   const handleRoleBasedRedirection = useCallback(
-    (user) => {
-      if (!user) return;
+  (user) => {
+    if (!user) return;
 
-      const userRole = user.role?.trim().toLowerCase();
+    const userRole = user.role?.trim().toLowerCase();
+    const currentPath = window.location.pathname;
 
-      if (userRole === 'admin') {
-        toast.success('Welcome to Admin Workspace! 🛡️');
-        router.push('/dashboard/admin');
-      } else if (userRole === 'librarian') {
-        toast.success('Welcome to Librarian Portal! 📚');
-        router.push('/dashboard/librarian');
-      } else {
-        toast.success('Welcome back! Logged in successfully. 👋');
-        router.push(redirectTo || '/');
-      }
-      router.refresh();
-    },
-    [router, redirectTo],
-  );
+    if (userRole === 'admin' && !currentPath.includes('/dashboard/admin')) {
+      toast.success('Welcome to Admin Workspace! 🛡️');
+      router.push('/dashboard/admin');
+    } else if (userRole === 'librarian' && !currentPath.includes('/dashboard/librarian')) {
+      toast.success('Welcome to Librarian Portal! 📚');
+      router.push('/dashboard/librarian');
+    } else if (!currentPath.includes('/dashboard')) {
+      toast.success('Welcome back! Logged in successfully. 👋');
+      router.push(redirectTo || '/');
+    }
+    router.refresh();
+  },
+  [router, redirectTo],
+);
 
   // ─── 3. USEEFFECT FOR AUTO REDIRECT ───
   useEffect(() => {
@@ -84,15 +85,10 @@ const LogInPage = () => {
         toast.error(
           signInError.message || 'Invalid email or password. Please try again.',
         );
-        setLoading(false);
         return;
       }
 
-      if (data?.user) {
-        handleRoleBasedRedirection(data.user);
-      }
     } catch (err) {
-      console.error('Sign-in error:', err);
       toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
@@ -294,8 +290,17 @@ const LogInPage = () => {
   );
 };
 
-export default LogInPage;
-
+export default function LogInPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full min-h-screen bg-[#05081F] flex items-center justify-center">
+        <Loader2 className="animate-spin text-[#6D4AFF]" size={32} />
+      </div>
+    }>
+      <LogInContent />
+    </Suspense>
+  );
+}
 
 
 

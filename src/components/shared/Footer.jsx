@@ -40,34 +40,6 @@ const Footer = () => {
 
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
-        {/* ───────────── TOP SECTION: NEWSLETTER ───────────── */}
-        <div className="bg-gradient-to-r from-[#0D1035] to-[#12164A] border border-white/5 rounded-3xl p-6 sm:p-10 mb-16 shadow-[0_12px_40px_rgba(0,0,0,0.3)] flex flex-col lg:flex-row items-center justify-between gap-8">
-          <div className="max-w-xl text-center lg:text-left">
-            <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Subscribe to Our <span className="text-[#F7B500]">Newsletter</span>
-            </h3>
-            <p className="text-sm text-[#B8B8C5] mt-2">
-              Get the latest book recommendations, literary insights, and premium delivery deals directly to your inbox.
-            </p>
-          </div>
-          <form onSubmit={(e) => e.preventDefault()} className="w-full lg:max-w-md flex flex-col sm:flex-row items-center gap-3">
-            <div className="relative w-full">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
-              <input 
-                type="email" 
-                placeholder="Enter your email address" 
-                className="w-full pl-11 pr-4 py-3.5 bg-[#05081F] border border-white/10 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#6D4AFF] focus:ring-1 focus:ring-[#6D4AFF] transition-all duration-200"
-                required
-              />
-            </div>
-            <button 
-              type="submit" 
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 bg-[#F7B500] text-[#05081F] font-bold text-sm rounded-xl hover:bg-[#FFD04D] shadow-[0_4px_20px_rgba(247,181,0,0.2)] hover:scale-[1.02] transition-all duration-200 shrink-0 cursor-pointer"
-            >
-              Subscribe <ArrowRight className="w-4 h-4" />
-            </button>
-          </form>
-        </div>
 
         {/* ───────────── MIDDLE SECTION: LINKS & INFO ───────────── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8 pb-12 border-b border-white/5">

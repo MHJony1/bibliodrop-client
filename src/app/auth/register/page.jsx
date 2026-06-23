@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -20,7 +20,7 @@ import { authClient } from '@/lib/auth-client';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
-const RegisterPage = () => {
+const RegisterContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '/';
@@ -36,8 +36,39 @@ const RegisterPage = () => {
   // UI States
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  
-  const [role, setRole] = useState('user'); 
+  const [isUploading, setIsUploading] = useState(false);
+  const [role, setRole] = useState('user');
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formDataImg = new FormData();
+    formDataImg.append('image', file);
+
+    setIsUploading(true);
+    try {
+      const response = await fetch(
+        `https://api.imgbb.com/1/upload?key=${process.env.NEXT_PUBLIC_IMGBB_API_KEY}`,
+        {
+          method: 'POST',
+          body: formDataImg,
+        },
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        setFormData((prev) => ({ ...prev, photoUrl: result.data.url }));
+        toast.success('Image uploaded successfully!');
+      } else {
+        toast.error('Image upload failed.');
+      }
+    } catch (err) {
+      toast.error('Error uploading image.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // Real-time Password Validation
   const passwordValidations = {
@@ -91,14 +122,17 @@ const RegisterPage = () => {
 
       if (signUpError) {
         toast.error(
-          signUpError.message || 'Registration failed! Please check your details.'
+          signUpError.message ||
+            'Registration failed! Please check your details.',
         );
         setLoading(false);
         return;
       }
 
       if (data) {
-        toast.success('Account created successfully! Welcome to BiblioDrop. 🎉');
+        toast.success(
+          'Account created successfully! Welcome to BiblioDrop. 🎉',
+        );
         router.push(redirectTo);
         router.refresh();
       }
@@ -139,7 +173,8 @@ const RegisterPage = () => {
         <div
           className="w-full border border-white/5 p-6 sm:p-8 shadow-[0_4px_48px_rgba(0,0,0,0.5)] backdrop-blur-2xl rounded-3xl"
           style={{
-            background: 'linear-gradient(135deg, rgba(13, 16, 53, 0.85) 0%, rgba(5, 8, 31, 0.98) 100%)',
+            background:
+              'linear-gradient(135deg, rgba(13, 16, 53, 0.85) 0%, rgba(5, 8, 31, 0.98) 100%)',
           }}
         >
           {/* Header */}
@@ -177,7 +212,10 @@ const RegisterPage = () => {
                 Full Name
               </label>
               <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                <User
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"
+                  size={16}
+                />
                 <input
                   type="text"
                   name="name"
@@ -190,20 +228,20 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            {/* Profile Picture URL */}
+            {/* Profile Picture Upload */}
             <div className="space-y-1">
               <label className="text-gray-300 font-semibold text-xs block pl-0.5">
-                Profile Picture URL <span className="text-gray-500 font-normal">(optional)</span>
+                Profile Picture{' '}
+                {isUploading && (
+                  <span className="text-[#6D4AFF]">(Uploading...)</span>
+                )}
               </label>
               <div className="relative">
-                <ImageIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
                 <input
-                  type="url"
-                  name="photoUrl"
-                  placeholder="https://example.com/avatar.jpg"
-                  value={formData.photoUrl}
-                  onChange={handleInputChange}
-                  className="w-full h-11 pl-10 pr-4 rounded-xl bg-[#05081F] border border-white/10 text-white placeholder:text-gray-600 text-sm outline-none transition-all focus:border-[#6D4AFF] focus:ring-1 focus:ring-[#6D4AFF]/30"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="w-full h-11 px-3 py-2 rounded-xl bg-[#05081F] border border-white/10 text-white text-sm outline-none transition-all file:mr-4 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#6D4AFF]/20 file:text-[#6D4AFF] hover:file:bg-[#6D4AFF]/30"
                 />
               </div>
             </div>
@@ -214,7 +252,10 @@ const RegisterPage = () => {
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                <Mail
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"
+                  size={16}
+                />
                 <input
                   type="email"
                   name="email"
@@ -233,7 +274,10 @@ const RegisterPage = () => {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+                <Lock
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"
+                  size={16}
+                />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
@@ -260,13 +304,19 @@ const RegisterPage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="flex flex-wrap gap-2.5 pt-1.5 px-1"
                 >
-                  <div className={`flex items-center gap-1 text-[10px] font-semibold transition-colors ${passwordValidations.hasMinLength ? 'text-green-400' : 'text-gray-500'}`}>
+                  <div
+                    className={`flex items-center gap-1 text-[10px] font-semibold transition-colors ${passwordValidations.hasMinLength ? 'text-green-400' : 'text-gray-500'}`}
+                  >
                     <CheckCircle size={10} /> Min 6 chars
                   </div>
-                  <div className={`flex items-center gap-1 text-[10px] font-semibold transition-colors ${passwordValidations.hasUppercase ? 'text-green-400' : 'text-gray-500'}`}>
+                  <div
+                    className={`flex items-center gap-1 text-[10px] font-semibold transition-colors ${passwordValidations.hasUppercase ? 'text-green-400' : 'text-gray-500'}`}
+                  >
                     <CheckCircle size={10} /> 1 Uppercase
                   </div>
-                  <div className={`flex items-center gap-1 text-[10px] font-semibold transition-colors ${passwordValidations.hasLowercase ? 'text-green-400' : 'text-gray-500'}`}>
+                  <div
+                    className={`flex items-center gap-1 text-[10px] font-semibold transition-colors ${passwordValidations.hasLowercase ? 'text-green-400' : 'text-gray-500'}`}
+                  >
                     <CheckCircle size={10} /> 1 Lowercase
                   </div>
                 </motion.div>
@@ -289,7 +339,10 @@ const RegisterPage = () => {
                       : 'border-white/10 bg-[#05081F] text-gray-400 hover:border-white/20 hover:text-gray-300'
                   }`}
                 >
-                  <User size={14} className={role === 'user' ? 'text-[#6D4AFF]' : ''} />
+                  <User
+                    size={14}
+                    className={role === 'user' ? 'text-[#6D4AFF]' : ''}
+                  />
                   <span className="text-xs font-bold">Reader (User)</span>
                 </button>
 
@@ -303,7 +356,10 @@ const RegisterPage = () => {
                       : 'border-white/10 bg-[#05081F] text-gray-400 hover:border-white/20 hover:text-gray-300'
                   }`}
                 >
-                  <ShieldAlert size={14} className={role === 'librarian' ? 'text-[#F7B500]' : ''} />
+                  <ShieldAlert
+                    size={14}
+                    className={role === 'librarian' ? 'text-[#F7B500]' : ''}
+                  />
                   <span className="text-xs font-bold">Librarian</span>
                 </button>
               </div>
@@ -369,7 +425,7 @@ const RegisterPage = () => {
           <p className="text-center text-gray-500 text-xs mt-5 mb-0">
             Already have an account?{' '}
             <Link
-              href={`/auth/signin?redirect=${encodeURIComponent(redirectTo)}`}
+              href={`/auth/login?redirect=${encodeURIComponent(redirectTo)}`}
               className="text-[#6D4AFF] hover:text-[#8B5CF6] font-bold transition-colors no-underline border-b border-transparent hover:border-[#8B5CF6]"
             >
               Sign in
@@ -381,4 +437,16 @@ const RegisterPage = () => {
   );
 };
 
-export default RegisterPage;
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full min-h-screen bg-[#05081F] flex items-center justify-center">
+          <Loader2 className="animate-spin text-[#6D4AFF]" size={32} />
+        </div>
+      }
+    >
+      <RegisterContent />
+    </Suspense>
+  );
+}
