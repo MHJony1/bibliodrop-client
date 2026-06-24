@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -16,6 +16,8 @@ import {
   Eye,
   Trash2,
   XCircle,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -45,38 +47,52 @@ export default function DeliveryHistoryTable({
   const [sortField, setSortField] = useState('date');
   const [sortDirection, setSortDirection] = useState('desc');
   const [processingId, setProcessingId] = useState(null);
-  const [confirmModal, setConfirmModal] = useState(null); // { type: 'cancel'|'delete', orderId, bookTitle }
+  const [confirmModal, setConfirmModal] = useState(null);
+
+  //  Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Filter & Sort
-  const filteredDeliveries = deliveries
-    .filter((d) => {
-      const matchesSearch =
-        d.bookTitle?.toLowerCase().includes(search.toLowerCase()) ||
-        d.transactionId?.toLowerCase().includes(search.toLowerCase()) ||
-        d.author?.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = filterStatus === 'All' || d.status === filterStatus;
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      let aVal = a[sortField] || '';
-      let bVal = b[sortField] || '';
-      if (sortField === 'date') {
-        aVal = new Date(aVal).getTime();
-        bVal = new Date(bVal).getTime();
-      } else if (sortField === 'amount' || sortField === 'totalFee') {
-        aVal = parseFloat(aVal) || 0;
-        bVal = parseFloat(bVal) || 0;
-      } else {
-        aVal = String(aVal).toLowerCase();
-        bVal = String(bVal).toLowerCase();
-      }
-      if (typeof aVal === 'string') {
-        return sortDirection === 'asc'
-          ? aVal.localeCompare(bVal)
-          : bVal.localeCompare(aVal);
-      }
-      return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
-    });
+  const filteredDeliveries = useMemo(() => {
+    return deliveries
+      .filter((d) => {
+        const matchesSearch =
+          d.bookTitle?.toLowerCase().includes(search.toLowerCase()) ||
+          d.transactionId?.toLowerCase().includes(search.toLowerCase()) ||
+          d.author?.toLowerCase().includes(search.toLowerCase());
+        const matchesStatus =
+          filterStatus === 'All' || d.status === filterStatus;
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => {
+        let aVal = a[sortField] || '';
+        let bVal = b[sortField] || '';
+        if (sortField === 'date') {
+          aVal = new Date(aVal).getTime();
+          bVal = new Date(bVal).getTime();
+        } else if (sortField === 'amount' || sortField === 'totalFee') {
+          aVal = parseFloat(aVal) || 0;
+          bVal = parseFloat(bVal) || 0;
+        } else {
+          aVal = String(aVal).toLowerCase();
+          bVal = String(bVal).toLowerCase();
+        }
+        if (typeof aVal === 'string') {
+          return sortDirection === 'asc'
+            ? aVal.localeCompare(bVal)
+            : bVal.localeCompare(aVal);
+        }
+        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+      });
+  }, [deliveries, search, filterStatus, sortField, sortDirection]);
+
+  //  Pagination Logic
+  const totalItems = filteredDeliveries.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentDeliveries = filteredDeliveries.slice(startIndex, endIndex);
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -85,6 +101,43 @@ export default function DeliveryHistoryTable({
       setSortField(field);
       setSortDirection('asc');
     }
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    document
+      .querySelector('.overflow-x-auto')
+      ?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleFilterChange = (status) => {
+    setFilterStatus(status);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (value) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+      return pages;
+    }
+    pages.push(1);
+    let start = Math.max(2, currentPage - 1);
+    let end = Math.min(totalPages - 1, currentPage + 1);
+    if (currentPage <= 3) end = 4;
+    if (currentPage >= totalPages - 2) start = totalPages - 3;
+    if (start > 2) pages.push('...');
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < totalPages - 1) pages.push('...');
+    pages.push(totalPages);
+    return pages;
   };
 
   // Cancel order handler
@@ -265,7 +318,7 @@ export default function DeliveryHistoryTable({
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search by book, transaction ID..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0E1330]/60 border border-white/[0.06] text-white placeholder-[#8890B5] focus:outline-none focus:border-[#6D4AFF] transition-all text-sm"
           />
@@ -275,7 +328,7 @@ export default function DeliveryHistoryTable({
           <div className="relative flex-1 sm:flex-none">
             <select
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              onChange={(e) => handleFilterChange(e.target.value)}
               className="w-full sm:w-40 px-4 py-2.5 rounded-xl bg-[#0E1330]/60 border border-white/[0.06] text-white text-sm focus:outline-none focus:border-[#6D4AFF] appearance-none cursor-pointer"
             >
               <option value="All">All Status</option>
@@ -314,7 +367,7 @@ export default function DeliveryHistoryTable({
           </thead>
           <tbody>
             <AnimatePresence>
-              {filteredDeliveries.length === 0 ? (
+              {currentDeliveries.length === 0 ? (
                 <tr>
                   <td
                     colSpan="6"
@@ -338,7 +391,7 @@ export default function DeliveryHistoryTable({
                   </td>
                 </tr>
               ) : (
-                filteredDeliveries.map((delivery, index) => {
+                currentDeliveries.map((delivery, index) => {
                   const statusKey = delivery.status || 'Pending';
                   const statusColor =
                     statusColors[statusKey] || statusColors['Pending'];
@@ -366,10 +419,12 @@ export default function DeliveryHistoryTable({
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      transition={{ duration: 0.2, delay: index * 0.03 }}
+                      transition={{
+                        duration: 0.2,
+                        delay: (startIndex + index) * 0.03,
+                      }}
                       className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors group"
                     >
-                      {/* Book Title */}
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-3">
                           {delivery.coverImage && (
@@ -396,19 +451,16 @@ export default function DeliveryHistoryTable({
                         </div>
                       </td>
 
-                      {/* Total Fee */}
                       <td className="px-4 py-3.5">
                         <span className="text-sm text-white font-bold">
                           ${displayFee.toFixed(2)}
                         </span>
                       </td>
 
-                      {/* Date */}
                       <td className="px-4 py-3.5 text-sm text-[#8890B5]">
                         {formatDate(delivery.date)}
                       </td>
 
-                      {/* Status */}
                       <td className="px-4 py-3.5">
                         <span
                           className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${statusColor}`}
@@ -418,17 +470,14 @@ export default function DeliveryHistoryTable({
                         </span>
                       </td>
 
-                      {/* Transaction ID */}
                       <td className="px-4 py-3.5">
                         <span className="text-xs font-mono text-[#A78BFA] bg-[#6D4AFF]/10 px-2.5 py-1 rounded-lg border border-[#6D4AFF]/20">
                           {transactionId || 'N/A'}
                         </span>
                       </td>
 
-                      {/* Actions */}
                       <td className="px-4 py-3.5">
                         <div className="flex items-center justify-end gap-2">
-                          {/* View Book */}
                           <Link
                             href={viewBookUrl}
                             title="View Book Details"
@@ -443,7 +492,6 @@ export default function DeliveryHistoryTable({
                             <Eye size={14} />
                           </Link>
 
-                          {/* Cancel — only for Pending */}
                           {canCancel && (
                             <button
                               title="Cancel Order"
@@ -466,7 +514,6 @@ export default function DeliveryHistoryTable({
                             </button>
                           )}
 
-                          {/* Delete — only for Delivered or Cancelled */}
                           {canDelete && (
                             <button
                               title="Delete Order"
@@ -498,6 +545,60 @@ export default function DeliveryHistoryTable({
           </tbody>
         </table>
       </div>
+
+      {/* ✅ Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-6 py-4 border-t border-white/[0.06] bg-[#0E1330]/40">
+          <span className="text-xs text-[#8890B5]">
+            Showing {startIndex + 1}–{Math.min(endIndex, totalItems)} of{' '}
+            {totalItems}
+          </span>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg border border-white/[0.06] bg-[#0E1330]/50 text-gray-400 hover:text-white hover:bg-[#6D4AFF] disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-all"
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            {getPageNumbers().map((page, index) => {
+              if (page === '...') {
+                return (
+                  <span
+                    key={`ellipsis-${index}`}
+                    className="w-8 text-center text-gray-500 text-xs"
+                  >
+                    …
+                  </span>
+                );
+              }
+              return (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`w-8 h-8 text-xs font-bold rounded-lg border transition-all ${
+                    currentPage === page
+                      ? 'bg-[#6D4AFF] border-[#6D4AFF] text-white shadow-[0_0_15px_rgba(109,74,255,0.3)]'
+                      : 'border-white/[0.06] bg-[#0E1330]/50 text-gray-400 hover:text-white hover:border-white/[0.15]'
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-lg border border-white/[0.06] bg-[#0E1330]/50 text-gray-400 hover:text-white hover:bg-[#6D4AFF] disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-all"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
