@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Eye, EyeOff, Edit2, Trash2, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Edit2, Trash2, Loader2, AlertTriangle, X } from 'lucide-react';
+import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
   handleDeleteBookAction,
@@ -11,12 +12,84 @@ import {
 } from '@/lib/actions/book';
 import EditBookModal from './EditBookModal';
 
+// ✅ Delete Confirmation Modal Component
+const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, bookTitle, isDeleting }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        className="bg-slate-900/95 border border-slate-700/60 rounded-2xl shadow-2xl w-full max-w-md p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-4 mb-5">
+          <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center flex-shrink-0">
+            <AlertTriangle size={22} className="text-rose-400" />
+          </div>
+          <div>
+            <h3 className="text-white font-bold text-lg leading-tight">
+              Delete Book?
+            </h3>
+            <p className="text-slate-400 text-sm mt-0.5">
+              This action cannot be undone.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-slate-800/40 border border-slate-700/40 rounded-xl px-4 py-3 mb-6">
+          <p className="text-white font-semibold text-sm line-clamp-1">
+            &nbsp;{bookTitle || 'Untitled'}&nbsp;
+          </p>
+          <p className="text-slate-400 text-xs mt-0.5">
+            This book will be permanently removed from your inventory.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onClose}
+            disabled={isDeleting}
+            className="flex-1 py-2.5 rounded-xl border border-slate-700/60 text-slate-300 text-sm font-semibold hover:bg-slate-800/60 transition-all disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isDeleting}
+            className="flex-1 py-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 text-sm font-semibold hover:bg-rose-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {isDeleting ? (
+              <>
+                <Loader2 size={14} className="animate-spin" /> Deleting...
+              </>
+            ) : (
+              <>
+                <Trash2 size={14} /> Yes, Delete
+              </>
+            )}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 const BookActionButtons = ({ bookId, initialStatus, book }) => {
   const [status, setStatus] = useState(initialStatus || 'Pending Approval');
   const [loading, setLoading] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  
+  // Delete Modal State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [formData, setFormData] = useState({
     title: book?.title || '',
@@ -62,19 +135,28 @@ const BookActionButtons = ({ bookId, initialStatus, book }) => {
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this book permanently?'))
-      return;
+  //  Handle Delete with Modal
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
     const toastId = toast.loading('Deleting book...');
     try {
       const result = await handleDeleteBookAction(bookId);
       if (result?.success) {
         toast.success('Book deleted successfully!', { id: toastId });
+        setShowDeleteModal(false);
+        // Refresh the page or update state
+        window.location.reload();
       } else {
         toast.error(result?.error || 'Failed to delete.', { id: toastId });
       }
     } catch (error) {
       toast.error('An unexpected error occurred.', { id: toastId });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -103,6 +185,33 @@ const BookActionButtons = ({ bookId, initialStatus, book }) => {
 
   return (
     <>
+      {/* Delete Confirmation Modal */}
+      {mounted && (
+        <DeleteConfirmModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleConfirmDelete}
+          bookTitle={book?.title || 'Untitled'}
+          isDeleting={isDeleting}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {mounted &&
+        showEditModal &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <EditBookModal
+            isOpen={showEditModal}
+            onClose={() => setShowEditModal(false)}
+            formData={formData}
+            setFormData={setFormData}
+            onSubmit={handleEditSubmit}
+            editLoading={editLoading}
+          />,
+          document.body,
+        )}
+
       <div className="flex items-center justify-end gap-1.5">
         {/* Status Toggle Button */}
         {isPending ? (
@@ -156,9 +265,9 @@ const BookActionButtons = ({ bookId, initialStatus, book }) => {
           />
         </button>
 
-        {/* Delete Button */}
+        {/* Delete Button - Modal Open  */}
         <button
-          onClick={handleDelete}
+          onClick={handleDeleteClick}
           title="Delete Book"
           className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:border-red-400/40 transition-all group"
         >
@@ -168,22 +277,6 @@ const BookActionButtons = ({ bookId, initialStatus, book }) => {
           />
         </button>
       </div>
-
-      {/* Edit Modal */}
-      {mounted &&
-        showEditModal &&
-        typeof document !== 'undefined' &&
-        createPortal(
-          <EditBookModal
-            isOpen={showEditModal}
-            onClose={() => setShowEditModal(false)}
-            formData={formData}
-            setFormData={setFormData}
-            onSubmit={handleEditSubmit}
-            editLoading={editLoading}
-          />,
-          document.body,
-        )}
     </>
   );
 };
