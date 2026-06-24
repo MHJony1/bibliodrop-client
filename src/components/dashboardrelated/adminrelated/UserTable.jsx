@@ -1,26 +1,34 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Trash2,
   Loader2,
   AlertTriangle,
   ChevronDown,
+  ChevronUp,
   User,
   Mail,
   Calendar,
   Shield,
   Crown,
   BookOpen,
+  Ban,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpDown,
+  Filter,
 } from 'lucide-react';
 import {
   handleUpdateUserRoleAction,
   handleDeleteUserAction,
+  handleBlockUserAction,
 } from '@/lib/actions/admin';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 
-// Role config
 const ROLES = ['user', 'librarian', 'admin'];
 
 const roleStyles = {
@@ -44,7 +52,6 @@ const roleStyles = {
   },
 };
 
-// Avatar Component
 const Avatar = ({ name, image }) => {
   const initials = (name || 'A')
     .split(' ')
@@ -77,7 +84,6 @@ const Avatar = ({ name, image }) => {
   );
 };
 
-// Delete Confirm Dialog
 const DeleteDialog = ({ user, onConfirm, onCancel, isDeleting }) => (
   <div
     className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
@@ -148,12 +154,133 @@ const UserTable = ({ users: initialUsers }) => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [search, setSearch] = useState('');
 
+  // ✅ Role Filter State
+  const [roleFilter, setRoleFilter] = useState('all');
+
+  // Sorting State
+  const [sortField, setSortField] = useState('name');
+  const [sortDirection, setSortDirection] = useState('asc');
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+    setCurrentPage(1);
+  };
+
+  // ✅ Filter, Sort & Paginate
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      // Search filter
+      const matchesSearch =
+        user.name?.toLowerCase().includes(search.toLowerCase()) ||
+        user.email?.toLowerCase().includes(search.toLowerCase());
+
+      // Role filter
+      const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+
+      return matchesSearch && matchesRole;
+    });
+  }, [users, search, roleFilter]);
+
+  const sortedUsers = useMemo(() => {
+    return [...filteredUsers].sort((a, b) => {
+      let aVal = a[sortField] || '';
+      let bVal = b[sortField] || '';
+      if (typeof aVal === 'string') {
+        return sortDirection === 'asc'
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
+      }
+      return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+  }, [filteredUsers, sortField, sortDirection]);
+
+  const totalItems = sortedUsers.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentUsers = sortedUsers.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    document
+      .querySelector('.overflow-x-auto')
+      ?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // ✅ Reset to page 1 on filter/search change
+  const handleFilterChange = (value) => {
+    setRoleFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (value) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+      return pages;
+    }
+    pages.push(1);
+    let start = Math.max(2, currentPage - 1);
+    let end = Math.min(totalPages - 1, currentPage + 1);
+    if (currentPage <= 3) end = 4;
+    if (currentPage >= totalPages - 2) start = totalPages - 3;
+    if (start > 2) pages.push('...');
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < totalPages - 1) pages.push('...');
+    pages.push(totalPages);
+    return pages;
+  };
+
   const handleRoleChange = async (userId, newRole) => {
     setLoadingId(userId);
     setUsers((prev) =>
       prev.map((u) => (u._id === userId ? { ...u, role: newRole } : u)),
     );
-    await handleUpdateUserRoleAction(userId, newRole);
+    const result = await handleUpdateUserRoleAction(userId, newRole);
+    if (!result.success) {
+      setUsers((prev) =>
+        prev.map((u) =>
+          u._id === userId
+            ? { ...u, role: users.find((x) => x._id === userId)?.role }
+            : u,
+        ),
+      );
+      toast.error(result.error || 'Failed to update role');
+    }
+    setLoadingId(null);
+  };
+
+  const handleBlockToggle = async (userId, currentBlocked) => {
+    const newBlocked = !currentBlocked;
+    setLoadingId(userId);
+    const result = await handleBlockUserAction(userId, newBlocked);
+    if (result.success) {
+      setUsers((prev) =>
+        prev.map((u) =>
+          u._id === userId ? { ...u, isBlocked: newBlocked } : u,
+        ),
+      );
+      toast.success(
+        `User ${newBlocked ? 'blocked' : 'unblocked'} successfully`,
+      );
+    } else {
+      toast.error(result.error || 'Failed to update user status');
+    }
     setLoadingId(null);
   };
 
@@ -164,20 +291,38 @@ const UserTable = ({ users: initialUsers }) => {
     const result = await handleDeleteUserAction(id);
     if (result?.success) {
       setUsers((prev) => prev.filter((u) => u._id !== id));
+      toast.success('User deleted successfully');
+    } else {
+      toast.error(result.error || 'Failed to delete user');
     }
     setLoadingId(null);
     setDeleteTarget(null);
   };
 
-  // Filter users by search
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name?.toLowerCase().includes(search.toLowerCase()) ||
-      user.email?.toLowerCase().includes(search.toLowerCase()),
-  );
-
   const totalAdmins = users.filter((u) => u.role === 'admin').length;
   const totalLibrarians = users.filter((u) => u.role === 'librarian').length;
+  const totalUsers = users.filter((u) => u.role === 'user').length;
+
+  const SortableHeader = ({ field, children }) => (
+    <th
+      onClick={() => handleSort(field)}
+      className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-[0.18em] whitespace-nowrap cursor-pointer hover:text-white transition-colors group"
+    >
+      <div className="flex items-center gap-1.5">
+        {children}
+        <ArrowUpDown
+          size={12}
+          className="opacity-30 group-hover:opacity-100 transition-opacity"
+        />
+        {sortField === field &&
+          (sortDirection === 'asc' ? (
+            <ChevronUp size={12} />
+          ) : (
+            <ChevronDown size={12} />
+          ))}
+      </div>
+    </th>
+  );
 
   return (
     <>
@@ -192,7 +337,7 @@ const UserTable = ({ users: initialUsers }) => {
         )}
       </AnimatePresence>
 
-      {/* Search & Stats Bar */}
+      {/* ✅ Search & Filter Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="relative w-full sm:w-72">
           <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
@@ -213,25 +358,47 @@ const UserTable = ({ users: initialUsers }) => {
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Search by name or email..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/60 border border-slate-700/50 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 transition-all text-sm"
           />
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-slate-400">
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-violet-400" />
-            Admin: {totalAdmins}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-blue-400" />
-            Librarian: {totalLibrarians}
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-slate-400" />
-            User: {users.length - totalAdmins - totalLibrarians}
-          </span>
+        <div className="flex flex-wrap items-center gap-3">
+          {/* ✅ Role Filter Dropdown */}
+          <div className="relative">
+            <select
+              value={roleFilter}
+              onChange={(e) => handleFilterChange(e.target.value)}
+              className="px-4 py-2.5 rounded-xl bg-slate-900/60 border border-slate-700/50 text-white text-sm focus:outline-none focus:border-violet-500/50 appearance-none cursor-pointer pr-10"
+            >
+              <option value="all">All Roles</option>
+              <option value="admin">👑 Admin</option>
+              <option value="librarian">📚 Librarian</option>
+              <option value="user">👤 User</option>
+            </select>
+            <Filter
+              size={14}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+            />
+          </div>
+
+          <div className="flex items-center gap-3 text-xs text-slate-400">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-violet-400" />
+              Admin: {totalAdmins}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-blue-400" />
+              Librarian: {totalLibrarians}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-slate-400" />
+              User: {totalUsers}
+            </span>
+            <span className="text-slate-500">|</span>
+            <span className="text-slate-500">Total: {users.length}</span>
+          </div>
         </div>
       </div>
 
@@ -240,9 +407,7 @@ const UserTable = ({ users: initialUsers }) => {
         <div className="px-6 py-3.5 bg-slate-900/80 border-b border-slate-800/60 flex items-center gap-2.5">
           <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
           <span className="text-slate-400 text-xs font-medium">
-            <span className="text-violet-400 font-bold">
-              {filteredUsers.length}
-            </span>{' '}
+            <span className="text-violet-400 font-bold">{totalItems}</span>{' '}
             registered members
             {filteredUsers.length !== users.length && (
               <span className="text-slate-500 ml-1">
@@ -256,27 +421,23 @@ const UserTable = ({ users: initialUsers }) => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-800/60 bg-slate-950/80">
-                {['User', 'Email', 'Role', 'Joined', 'Actions'].map(
-                  (head, index) => (
-                    <th
-                      key={head}
-                      className={`px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-[0.18em] whitespace-nowrap ${
-                        index === 0 ? 'pl-6' : ''
-                      }`}
-                    >
-                      {head}
-                    </th>
-                  ),
-                )}
+                <SortableHeader field="name">User</SortableHeader>
+                <SortableHeader field="email">Email</SortableHeader>
+                <SortableHeader field="role">Role</SortableHeader>
+                <SortableHeader field="createdAt">Joined</SortableHeader>
+                <th className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-[0.18em] whitespace-nowrap text-right">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/30">
               <AnimatePresence>
-                {filteredUsers.map((user, index) => {
+                {currentUsers.map((user, index) => {
                   const isLoading = loadingId === user._id;
                   const role = (user.role || 'user').toLowerCase();
                   const style = roleStyles[role] || roleStyles.user;
                   const RoleIcon = style.icon;
+                  const isBlocked = user.isBlocked || false;
 
                   return (
                     <motion.tr
@@ -289,19 +450,24 @@ const UserTable = ({ users: initialUsers }) => {
                         isLoading
                           ? 'opacity-40 pointer-events-none'
                           : 'hover:bg-slate-800/30'
-                      }`}
+                      } ${isBlocked ? 'bg-red-500/5' : ''}`}
                     >
-                      {/* User */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <Avatar name={user.name} image={user.image} />
-                          <span className="text-slate-100 font-semibold text-sm group-hover:text-white transition-colors">
-                            {user.name || 'Anonymous'}
-                          </span>
+                          <div>
+                            <span className="text-slate-100 font-semibold text-sm group-hover:text-white transition-colors">
+                              {user.name || 'Anonymous'}
+                            </span>
+                            {isBlocked && (
+                              <span className="ml-2 text-[9px] font-bold text-red-400 bg-red-500/20 px-1.5 py-0.5 rounded">
+                                Blocked
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
 
-                      {/* Email */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <Mail size={14} className="text-slate-600" />
@@ -311,7 +477,6 @@ const UserTable = ({ users: initialUsers }) => {
                         </div>
                       </td>
 
-                      {/* Role dropdown */}
                       <td className="px-6 py-4">
                         <div className="relative inline-flex items-center">
                           <span
@@ -346,7 +511,6 @@ const UserTable = ({ users: initialUsers }) => {
                         </div>
                       </td>
 
-                      {/* Joined */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <Calendar size={14} className="text-slate-600" />
@@ -365,21 +529,42 @@ const UserTable = ({ users: initialUsers }) => {
                         </div>
                       </td>
 
-                      {/* Delete */}
                       <td className="px-6 py-4">
-                        {isLoading ? (
-                          <Loader2
-                            size={16}
-                            className="animate-spin text-slate-500"
-                          />
-                        ) : (
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
-                            onClick={() => setDeleteTarget(user)}
-                            className="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-400 hover:bg-rose-500/20 hover:border-rose-400/40 hover:text-rose-300 transition-all flex items-center justify-center group-hover:scale-105"
+                            onClick={() =>
+                              handleBlockToggle(user._id, isBlocked)
+                            }
+                            disabled={isLoading}
+                            className={`p-2 rounded-lg border transition-all ${
+                              isBlocked
+                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-400/40'
+                                : 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/20 hover:border-amber-400/40'
+                            } group-hover:scale-105`}
+                            title={isBlocked ? 'Unblock User' : 'Block User'}
                           >
-                            <Trash2 size={15} />
+                            {isBlocked ? (
+                              <CheckCircle size={15} />
+                            ) : (
+                              <Ban size={15} />
+                            )}
                           </button>
-                        )}
+
+                          {isLoading ? (
+                            <Loader2
+                              size={16}
+                              className="animate-spin text-slate-500"
+                            />
+                          ) : (
+                            <button
+                              onClick={() => setDeleteTarget(user)}
+                              className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-400 hover:bg-rose-500/20 hover:border-rose-400/40 hover:text-rose-300 transition-all flex items-center justify-center group-hover:scale-105"
+                              title="Delete User"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </motion.tr>
                   );
@@ -388,6 +573,60 @@ const UserTable = ({ users: initialUsers }) => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-slate-800/60 bg-slate-900/60">
+            <span className="text-xs text-slate-500">
+              Showing {startIndex + 1}–{Math.min(endIndex, totalItems)} of{' '}
+              {totalItems}
+            </span>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-slate-700/50 bg-slate-900/50 text-slate-400 hover:text-white hover:bg-violet-500/20 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition-all"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              {getPageNumbers().map((page, index) => {
+                if (page === '...') {
+                  return (
+                    <span
+                      key={`ellipsis-${index}`}
+                      className="w-8 text-center text-slate-500 text-xs"
+                    >
+                      …
+                    </span>
+                  );
+                }
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`w-8 h-8 text-xs font-bold rounded-lg border transition-all ${
+                      currentPage === page
+                        ? 'bg-violet-500/20 border-violet-500/30 text-violet-400'
+                        : 'border-slate-700/50 bg-slate-900/50 text-slate-400 hover:text-white hover:border-slate-600'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-slate-700/50 bg-slate-900/50 text-slate-400 hover:text-white hover:bg-violet-500/20 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition-all"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

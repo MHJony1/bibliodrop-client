@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { approveBook, adminDeleteBook, updateUserRole, deleteUser, getAllBooks, toggleBookStatus, getAllTransactions, updateTransactionStatus } from "@/lib/api/admin";
+import { approveBook, adminDeleteBook, updateUserRole, deleteUser, getAllBooks, toggleBookStatus, getAllTransactions, updateTransactionStatus, blockUser } from "@/lib/api/admin";
 
 //1. approve book action (book-approvals)
 export const handleApproveBookAction = async (bookId) => {
@@ -119,6 +119,21 @@ export const handleUpdateTransactionStatusAction = async (transactionId, status)
     return { success: false, error: result?.message || "Failed to update status" };
   } catch (error) {
     console.error("Update Transaction Status Error:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Block/Unblock User Action
+export const handleBlockUserAction = async (userId, isBlocked) => {
+  try {
+    const result = await blockUser(userId, isBlocked);
+    if (result?.success) {
+      revalidatePath("/dashboard/admin/manage-users");
+      return { success: true, message: result.message };
+    }
+    return { success: false, error: result?.message || "Failed to update user status." };
+  } catch (error) {
+    console.error("Admin Action Error (Block User):", error);
     return { success: false, error: error.message };
   }
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useMemo } from 'react';
 import {
   Trash2,
   CheckCircle2,
@@ -13,14 +13,22 @@ import {
   Calendar,
   DollarSign,
   Tag,
+  Search,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpDown,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import {
   handleApproveBookAction,
   handleAdminDeleteBookAction,
 } from '@/lib/actions/admin';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 
-// ✅ Confirmation Dialog Component
+// Delete Confirm Dialog
 const DeleteConfirmDialog = ({ book, onConfirm, onCancel, isDeleting }) => {
   return (
     <div
@@ -92,7 +100,105 @@ const ApprovalTable = ({ books: initialBooks }) => {
   const [loadingAction, setLoadingAction] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [search, setSearch] = useState('');
+  const [filterCategory, setFilterCategory] = useState('all');
+  const [sortField, setSortField] = useState('dateAdded');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
   const [isPending, startTransition] = useTransition();
+
+  // Get unique categories
+  const categories = useMemo(() => {
+    const unique = new Set();
+    books.forEach((book) => {
+      if (book.category && book.category.trim() !== '') {
+        unique.add(book.category.toLowerCase());
+      }
+    });
+    return ['all', ...Array.from(unique)];
+  }, [books]);
+
+  // Filter, Sort & Paginate
+  const filteredBooks = useMemo(() => {
+    return books.filter((book) => {
+      const matchesSearch =
+        book.title?.toLowerCase().includes(search.toLowerCase()) ||
+        book.author?.toLowerCase().includes(search.toLowerCase()) ||
+        book.librarianName?.toLowerCase().includes(search.toLowerCase());
+
+      const matchesCategory =
+        filterCategory === 'all' ||
+        book.category?.toLowerCase() === filterCategory.toLowerCase();
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [books, search, filterCategory]);
+
+  const sortedBooks = useMemo(() => {
+    return [...filteredBooks].sort((a, b) => {
+      let aVal = a[sortField] || '';
+      let bVal = b[sortField] || '';
+      if (typeof aVal === 'string') {
+        return sortDirection === 'asc'
+          ? aVal.localeCompare(bVal)
+          : bVal.localeCompare(aVal);
+      }
+      return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+  }, [filteredBooks, sortField, sortDirection]);
+
+  const totalItems = sortedBooks.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentBooks = sortedBooks.slice(startIndex, endIndex);
+
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    document
+      .querySelector('.overflow-x-auto')
+      ?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleFilterChange = (value) => {
+    setFilterCategory(value);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (value) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+      return pages;
+    }
+    pages.push(1);
+    let start = Math.max(2, currentPage - 1);
+    let end = Math.min(totalPages - 1, currentPage + 1);
+    if (currentPage <= 3) end = 4;
+    if (currentPage >= totalPages - 2) start = totalPages - 3;
+    if (start > 2) pages.push('...');
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < totalPages - 1) pages.push('...');
+    pages.push(totalPages);
+    return pages;
+  };
 
   const formatDate = (book) => {
     const raw = book.dateAdded || book.createdAt;
@@ -106,14 +212,6 @@ const ApprovalTable = ({ books: initialBooks }) => {
     });
   };
 
-  // Filter books
-  const filteredBooks = books.filter(
-    (book) =>
-      book.title?.toLowerCase().includes(search.toLowerCase()) ||
-      book.author?.toLowerCase().includes(search.toLowerCase()) ||
-      book.librarianName?.toLowerCase().includes(search.toLowerCase()),
-  );
-
   const performApprove = async (id) => {
     setLoadingId(id);
     setLoadingAction('approve');
@@ -122,9 +220,13 @@ const ApprovalTable = ({ books: initialBooks }) => {
         const result = await handleApproveBookAction(id);
         if (result?.success) {
           setBooks((prev) => prev.filter((b) => b._id !== id));
+          toast.success('Book approved successfully!');
+        } else {
+          toast.error(result?.error || 'Failed to approve book');
         }
       } catch (err) {
         console.error('Approve failed:', err);
+        toast.error('Something went wrong');
       } finally {
         setLoadingId(null);
         setLoadingAction(null);
@@ -143,9 +245,13 @@ const ApprovalTable = ({ books: initialBooks }) => {
         const result = await handleAdminDeleteBookAction(id);
         if (result?.success) {
           setBooks((prev) => prev.filter((b) => b._id !== id));
+          toast.success('Book deleted successfully');
+        } else {
+          toast.error(result?.error || 'Failed to delete book');
         }
       } catch (err) {
         console.error('Delete failed:', err);
+        toast.error('Something went wrong');
       } finally {
         setLoadingId(null);
         setLoadingAction(null);
@@ -153,6 +259,27 @@ const ApprovalTable = ({ books: initialBooks }) => {
       }
     });
   };
+
+  const SortableHeader = ({ field, children, width }) => (
+    <th
+      onClick={() => handleSort(field)}
+      className={`${width} px-5 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-[0.18em] whitespace-nowrap cursor-pointer hover:text-white transition-colors group`}
+    >
+      <div className="flex items-center gap-1.5">
+        {children}
+        <ArrowUpDown
+          size={11}
+          className="opacity-30 group-hover:opacity-100 transition-opacity"
+        />
+        {sortField === field &&
+          (sortDirection === 'asc' ? (
+            <ChevronUp size={12} />
+          ) : (
+            <ChevronDown size={12} />
+          ))}
+      </div>
+    </th>
+  );
 
   if (books.length === 0) {
     return (
@@ -184,7 +311,7 @@ const ApprovalTable = ({ books: initialBooks }) => {
       </AnimatePresence>
 
       <div className="w-full rounded-2xl border border-slate-800/60 overflow-hidden shadow-2xl shadow-black/50 bg-slate-900/30 backdrop-blur-sm">
-        {/* Top Bar with Search */}
+        {/* Top Bar with Search & Filter */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-6 py-3.5 bg-slate-900/80 border-b border-slate-800/60">
           <div className="flex items-center gap-2.5">
             <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
@@ -194,29 +321,53 @@ const ApprovalTable = ({ books: initialBooks }) => {
             </span>
           </div>
 
-          <div className="relative w-full sm:w-56">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
-              <svg
-                className="w-3.5 h-3.5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            {/* Search */}
+            <div className="relative flex-1 sm:w-44">
+              <div className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500">
+                <Search size={13} />
+              </div>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Search books..."
+                className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/50 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-amber-500/30 transition-all"
+              />
             </div>
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search books..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/50 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-amber-500/30 transition-all"
-            />
+
+            {/* Category Filter */}
+            <div className="relative">
+              <select
+                value={filterCategory}
+                onChange={(e) => handleFilterChange(e.target.value)}
+                className="px-3 py-1.5 pr-8 rounded-lg bg-slate-800/60 border border-slate-700/50 text-white text-xs focus:outline-none focus:border-amber-500/30 appearance-none cursor-pointer min-w-[120px]"
+              >
+                <option value="all">All Categories</option>
+                {categories
+                  .filter((c) => c !== 'all')
+                  .map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </option>
+                  ))}
+              </select>
+              <Filter
+                size={12}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+              />
+            </div>
+
+            {/* Active Filter Badge */}
+            {filterCategory !== 'all' && (
+              <button
+                onClick={() => handleFilterChange('all')}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-medium hover:bg-amber-500/20 transition-all whitespace-nowrap"
+              >
+                <span>Filter: {filterCategory}</span>
+                <X size={12} className="hover:text-amber-300" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -225,28 +376,33 @@ const ApprovalTable = ({ books: initialBooks }) => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-800/60 bg-slate-950/80">
-                {[
-                  { label: 'Title', width: 'w-52' },
-                  { label: 'Author', width: 'w-36' },
-                  { label: 'Category', width: 'w-28' },
-                  { label: 'Fee', width: 'w-20' },
-                  { label: 'Librarian', width: 'w-40' },
-                  { label: 'Date', width: 'w-28' },
-                  { label: 'Actions', width: 'w-40' },
-                ].map(({ label, width }) => (
-                  <th
-                    key={label}
-                    className={`${width} px-5 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-[0.18em] whitespace-nowrap`}
-                  >
-                    {label}
-                  </th>
-                ))}
+                <SortableHeader field="title" width="w-48">
+                  Title
+                </SortableHeader>
+                <SortableHeader field="author" width="w-32">
+                  Author
+                </SortableHeader>
+                <SortableHeader field="category" width="w-24">
+                  Category
+                </SortableHeader>
+                <SortableHeader field="price" width="w-20">
+                  Fee
+                </SortableHeader>
+                <SortableHeader field="librarianName" width="w-36">
+                  Librarian
+                </SortableHeader>
+                <SortableHeader field="dateAdded" width="w-28">
+                  Date
+                </SortableHeader>
+                <th className="w-40 px-5 py-4 text-[10px] font-bold text-slate-500 uppercase tracking-[0.18em] whitespace-nowrap">
+                  Actions
+                </th>
               </tr>
             </thead>
 
             <tbody className="divide-y divide-slate-800/30">
               <AnimatePresence>
-                {filteredBooks.map((book, index) => {
+                {currentBooks.map((book, index) => {
                   const isThisLoading = loadingId === book._id;
 
                   return (
@@ -263,7 +419,7 @@ const ApprovalTable = ({ books: initialBooks }) => {
                       }`}
                     >
                       <td className="px-5 py-4">
-                        <p className="font-semibold text-slate-100 text-sm leading-snug group-hover:text-white transition-colors line-clamp-1 max-w-[180px]">
+                        <p className="font-semibold text-slate-100 text-sm leading-snug group-hover:text-white transition-colors line-clamp-1 max-w-[160px]">
                           {book.title || 'Untitled'}
                         </p>
                       </td>
@@ -304,7 +460,6 @@ const ApprovalTable = ({ books: initialBooks }) => {
 
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-2">
-                          {/* Approve */}
                           <button
                             onClick={() => performApprove(book._id)}
                             disabled={isThisLoading}
@@ -318,7 +473,6 @@ const ApprovalTable = ({ books: initialBooks }) => {
                             Approve
                           </button>
 
-                          {/* Delete */}
                           <button
                             onClick={() => setDeleteTarget(book)}
                             disabled={isThisLoading}
@@ -336,8 +490,62 @@ const ApprovalTable = ({ books: initialBooks }) => {
           </table>
         </div>
 
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-3 border-t border-slate-800/60 bg-slate-900/60">
+            <span className="text-xs text-slate-500">
+              Showing {startIndex + 1}–{Math.min(endIndex, totalItems)} of{' '}
+              {totalItems}
+            </span>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-1.5 rounded-lg border border-slate-700/50 bg-slate-900/50 text-slate-400 hover:text-white hover:bg-amber-500/20 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition-all"
+              >
+                <ChevronLeft size={15} />
+              </button>
+
+              {getPageNumbers().map((page, index) => {
+                if (page === '...') {
+                  return (
+                    <span
+                      key={`ellipsis-${index}`}
+                      className="w-7 text-center text-slate-500 text-xs"
+                    >
+                      …
+                    </span>
+                  );
+                }
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`w-7 h-7 text-xs font-bold rounded-lg border transition-all ${
+                      currentPage === page
+                        ? 'bg-amber-500/20 border-amber-500/30 text-amber-400'
+                        : 'border-slate-700/50 bg-slate-900/50 text-slate-400 hover:text-white hover:border-slate-600'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-1.5 rounded-lg border border-slate-700/50 bg-slate-900/50 text-slate-400 hover:text-white hover:bg-amber-500/20 disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-slate-400 transition-all"
+              >
+                <ChevronRight size={15} />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Footer */}
-        <div className="px-6 py-3 bg-slate-900/60 border-t border-slate-800/60 flex items-center justify-between">
+        <div className="px-6 py-2.5 bg-slate-900/60 border-t border-slate-800/60 flex items-center justify-between">
           <span className="text-xs text-slate-500">
             Showing{' '}
             <span className="text-white font-medium">

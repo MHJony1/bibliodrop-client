@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Receipt, 
-  RefreshCw, 
+import {
+  Receipt,
+  RefreshCw,
   DollarSign,
   Package,
   Clock,
-  TrendingUp
+  TrendingUp,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -31,12 +31,14 @@ export default function TransactionsPage() {
       if (result.success) {
         const data = result.data || [];
         setTransactions(data);
-        
-        // Calculate stats
-        const totalRevenue = data.reduce((sum, tx) => sum + (tx.amountPaid || 0), 0);
-        const pending = data.filter(tx => tx.status === 'Pending').length;
-        const delivered = data.filter(tx => tx.status === 'Delivered').length;
-        
+
+        const totalRevenue = data.reduce(
+          (sum, tx) => sum + (tx.amountPaid || 0),
+          0,
+        );
+        const pending = data.filter((tx) => tx.status === 'Pending').length;
+        const delivered = data.filter((tx) => tx.status === 'Delivered').length;
+
         setStats({
           total: data.length,
           totalRevenue,
@@ -126,11 +128,15 @@ export default function TransactionsPage() {
             className="p-4 sm:p-5 rounded-2xl bg-[#0D1033]/60 border border-white/6 backdrop-blur-sm"
           >
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-xl bg-linear-to-r ${stat.color} bg-opacity-10`}>
+              <div
+                className={`p-2 rounded-xl bg-gradient-to-r ${stat.color} bg-opacity-10`}
+              >
                 <stat.icon size={16} className="text-white" />
               </div>
               <div>
-                <p className="text-xs text-[#8890B5] font-medium">{stat.label}</p>
+                <p className="text-xs text-[#8890B5] font-medium">
+                  {stat.label}
+                </p>
                 <p className="text-lg sm:text-xl font-bold text-white">
                   {typeof stat.value === 'number' ? stat.value : stat.value}
                 </p>
@@ -140,7 +146,7 @@ export default function TransactionsPage() {
         ))}
       </div>
 
-      {/* Transactions Table - showActions false */}
+      {/* Transactions Table - with pagination */}
       <TransactionsTable
         transactions={transactions}
         loading={loading}

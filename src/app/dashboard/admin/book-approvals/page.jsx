@@ -3,11 +3,15 @@ import { getPendingBooks } from '@/lib/api/admin';
 import ApprovalTable from '@/components/dashboardrelated/adminrelated/ApprovalTable';
 import { ClipboardList, Clock, BookOpen, Users } from 'lucide-react';
 
+export const metadata = {
+  title: 'Book Approvals | BiblioDrop',
+  description: 'Review and manage pending book submissions.',
+};
+
 export default async function BookApprovalsPage() {
   const response = await getPendingBooks();
   const pendingBooks = response?.data || [];
 
-  // Calculate stats
   const totalPending = pendingBooks.length;
   const uniqueLibrarians = new Set(pendingBooks.map((b) => b.librarianEmail))
     .size;

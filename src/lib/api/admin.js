@@ -31,3 +31,11 @@ export const updateTransactionStatus = (transactionId, status) =>
     { status },
     'PATCH',
   );
+
+export const blockUser = async (userId, isBlocked) => {
+  return await authMutation(
+    `/api/admin/users/${userId}/block`,
+    { isBlocked },
+    "PATCH"
+  );
+};

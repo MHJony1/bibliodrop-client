@@ -3,10 +3,10 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { 
-  Search, 
-  ChevronDown, 
-  ChevronUp, 
+import {
+  Search,
+  ChevronDown,
+  ChevronUp,
   CheckCircle,
   XCircle,
   Clock,
@@ -14,25 +14,27 @@ import {
   Trash2,
   BookOpen,
   Filter,
-  AlertTriangle
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 
 const statusColors = {
   'Pending Approval': 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  'Published': 'bg-green-500/20 text-green-400 border-green-500/30',
-  'Unpublished': 'bg-red-500/20 text-red-400 border-red-500/30',
+  Published: 'bg-green-500/20 text-green-400 border-green-500/30',
+  Unpublished: 'bg-red-500/20 text-red-400 border-red-500/30',
   'Checked Out': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  'Available': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  Available: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
 };
 
 const statusIcons = {
   'Pending Approval': <Clock size={14} />,
-  'Published': <CheckCircle size={14} />,
-  'Unpublished': <XCircle size={14} />,
+  Published: <CheckCircle size={14} />,
+  Unpublished: <XCircle size={14} />,
   'Checked Out': <BookOpen size={14} />,
-  'Available': <CheckCircle size={14} />,
+  Available: <CheckCircle size={14} />,
 };
 
 // Delete Confirmation Modal
@@ -53,11 +55,14 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, bookTitle }) {
           </div>
           <h3 className="text-lg font-bold text-white">Delete Book</h3>
         </div>
-        
+
         <p className="text-[#8890B5] text-sm mb-2">
-          Are you sure you want to delete <span className="text-white font-medium">"{bookTitle}"</span>?
+          Are you sure you want to delete{' '}
+          <span className="text-white font-medium">&quot;{bookTitle}&quot;</span>?
         </p>
-        <p className="text-[#565C7A] text-xs mb-6">This action cannot be undone.</p>
+        <p className="text-[#565C7A] text-xs mb-6">
+          This action cannot be undone.
+        </p>
 
         <div className="flex gap-3">
           <button
@@ -78,41 +83,64 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, bookTitle }) {
   );
 }
 
-export default function ManageBooksTable({ 
-  books = [], 
-  loading = false, 
-  onToggleStatus, 
+export default function ManageBooksTable({
+  books = [],
+  loading = false,
+  onToggleStatus,
   onDelete,
-  onView 
+  onView,
 }) {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [sortField, setSortField] = useState('title');
   const [sortDirection, setSortDirection] = useState('asc');
-  const [deleteModal, setDeleteModal] = useState({ isOpen: false, bookId: null, bookTitle: '' });
+  const [deleteModal, setDeleteModal] = useState({
+    isOpen: false,
+    bookId: null,
+    bookTitle: '',
+  });
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   // Filter & Sort Logic
   const filteredBooks = books
-    .filter(book => {
-      const matchesSearch = 
+    .filter((book) => {
+      const matchesSearch =
         book.title?.toLowerCase().includes(search.toLowerCase()) ||
         book.author?.toLowerCase().includes(search.toLowerCase()) ||
         book.category?.toLowerCase().includes(search.toLowerCase());
-      
-      const matchesStatus = filterStatus === 'All' || book.status === filterStatus;
-      
+
+      const matchesStatus =
+        filterStatus === 'All' || book.status === filterStatus;
+
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
       const aVal = a[sortField] || '';
       const bVal = b[sortField] || '';
       if (typeof aVal === 'string') {
-        return sortDirection === 'asc' 
-          ? aVal.localeCompare(bVal) 
+        return sortDirection === 'asc'
+          ? aVal.localeCompare(bVal)
           : bVal.localeCompare(aVal);
       }
       return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
     });
+
+  // Pagination Logic
+  const totalItems = filteredBooks.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentBooks = filteredBooks.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    document
+      .querySelector('.overflow-x-auto')
+      ?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -121,13 +149,22 @@ export default function ManageBooksTable({
       setSortField(field);
       setSortDirection('asc');
     }
+    setCurrentPage(1);
+  };
+
+  const handleFilterChange = (status) => {
+    setFilterStatus(status);
+    setCurrentPage(1);
   };
 
   const handleToggleStatus = async (bookId, currentStatus) => {
-    const newStatus = currentStatus === 'Published' ? 'Unpublished' : 'Published';
+    const newStatus =
+      currentStatus === 'Published' ? 'Unpublished' : 'Published';
     const result = await onToggleStatus(bookId, newStatus);
     if (result?.success) {
-      toast.success(`Book ${newStatus === 'Published' ? 'Published' : 'Unpublished'} successfully!`);
+      toast.success(
+        `Book ${newStatus === 'Published' ? 'Published' : 'Unpublished'} successfully!`,
+      );
     } else {
       toast.error(result?.error || 'Failed to update status');
     }
@@ -149,18 +186,46 @@ export default function ManageBooksTable({
   };
 
   const SortableHeader = ({ field, children }) => (
-    <th 
+    <th
       onClick={() => handleSort(field)}
       className="px-4 py-3 text-left text-xs font-bold text-[#8890B5] uppercase tracking-wider cursor-pointer hover:text-white transition-colors"
     >
       <div className="flex items-center gap-1.5">
         {children}
-        {sortField === field && (
-          sortDirection === 'asc' ? <ChevronUp size={14} /> : <ChevronDown size={14} />
-        )}
+        {sortField === field &&
+          (sortDirection === 'asc' ? (
+            <ChevronUp size={14} />
+          ) : (
+            <ChevronDown size={14} />
+          ))}
       </div>
     </th>
   );
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+      return pages;
+    }
+
+    pages.push(1);
+
+    let start = Math.max(2, currentPage - 1);
+    let end = Math.min(totalPages - 1, currentPage + 1);
+
+    if (currentPage <= 3) end = 4;
+    if (currentPage >= totalPages - 2) start = totalPages - 3;
+
+    if (start > 2) pages.push('...');
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < totalPages - 1) pages.push('...');
+    pages.push(totalPages);
+
+    return pages;
+  };
 
   if (loading) {
     return (
@@ -179,7 +244,9 @@ export default function ManageBooksTable({
       {/* Delete Confirmation Modal */}
       <DeleteConfirmModal
         isOpen={deleteModal.isOpen}
-        onClose={() => setDeleteModal({ isOpen: false, bookId: null, bookTitle: '' })}
+        onClose={() =>
+          setDeleteModal({ isOpen: false, bookId: null, bookTitle: '' })
+        }
         onConfirm={handleConfirmDelete}
         bookTitle={deleteModal.bookTitle}
       />
@@ -187,11 +254,17 @@ export default function ManageBooksTable({
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8890B5]" size={16} />
+          <Search
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8890B5]"
+            size={16}
+          />
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="Search by title, author..."
             className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0E1330]/60 border border-white/[0.06] text-white placeholder-[#8890B5] focus:outline-none focus:border-[#6D4AFF] transition-all text-sm"
           />
@@ -201,7 +274,7 @@ export default function ManageBooksTable({
           <div className="relative flex-1 sm:flex-none">
             <select
               value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
+              onChange={(e) => handleFilterChange(e.target.value)}
               className="w-full sm:w-44 px-4 py-2.5 rounded-xl bg-[#0E1330]/60 border border-white/[0.06] text-white text-sm focus:outline-none focus:border-[#6D4AFF] appearance-none cursor-pointer"
             >
               <option value="All">All Status</option>
@@ -211,10 +284,13 @@ export default function ManageBooksTable({
               <option value="Available">Available</option>
               <option value="Checked Out">Checked Out</option>
             </select>
-            <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8890B5] pointer-events-none" size={14} />
+            <Filter
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8890B5] pointer-events-none"
+              size={14}
+            />
           </div>
           <span className="text-xs text-[#8890B5] whitespace-nowrap">
-            {filteredBooks.length} / {books.length} books
+            {totalItems} books
           </span>
         </div>
       </div>
@@ -237,21 +313,28 @@ export default function ManageBooksTable({
           </thead>
           <tbody>
             <AnimatePresence>
-              {filteredBooks.length === 0 ? (
+              {currentBooks.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-4 py-16 text-center text-[#8890B5]">
+                  <td
+                    colSpan="7"
+                    className="px-4 py-16 text-center text-[#8890B5]"
+                  >
                     <div className="flex flex-col items-center gap-3">
                       <BookOpen size={40} className="text-[#6D4AFF]/30" />
                       <p className="text-sm font-medium">No books found</p>
-                      <p className="text-xs text-[#565C7A]">Try adjusting your search or filters</p>
+                      <p className="text-xs text-[#565C7A]">
+                        Try adjusting your search or filters
+                      </p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                filteredBooks.map((book, index) => {
+                currentBooks.map((book, index) => {
                   const statusKey = book.status || 'Pending Approval';
-                  const statusColor = statusColors[statusKey] || statusColors['Pending Approval'];
-                  const statusIcon = statusIcons[statusKey] || statusIcons['Pending Approval'];
+                  const statusColor =
+                    statusColors[statusKey] || statusColors['Pending Approval'];
+                  const statusIcon =
+                    statusIcons[statusKey] || statusIcons['Pending Approval'];
                   const isPublished = statusKey === 'Published';
                   const isPending = statusKey === 'Pending Approval';
 
@@ -261,14 +344,17 @@ export default function ManageBooksTable({
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      transition={{ duration: 0.2, delay: index * 0.03 }}
+                      transition={{
+                        duration: 0.2,
+                        delay: (startIndex + index) * 0.03,
+                      }}
                       className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors group"
                     >
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-3">
                           {book.coverImage && (
-                            <Image 
-                              src={book.coverImage} 
+                            <Image
+                              src={book.coverImage}
                               alt={book.title || 'Book cover'}
                               width={40}
                               height={48}
@@ -290,29 +376,37 @@ export default function ManageBooksTable({
                         </span>
                       </td>
                       <td className="px-4 py-3.5 text-sm text-white font-medium">
-                        ${book.price?.toFixed(2) || book.deliveryFee?.toFixed(2) || '0.00'}
+                        $
+                        {book.price?.toFixed(2) ||
+                          book.deliveryFee?.toFixed(2) ||
+                          '0.00'}
                       </td>
                       <td className="px-4 py-3.5 text-sm text-[#8890B5]">
                         {book.librarianName || book.librarian || 'N/A'}
                       </td>
                       <td className="px-4 py-3.5">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${statusColor}`}>
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${statusColor}`}
+                        >
                           {statusIcon}
                           {statusKey}
                         </span>
                       </td>
                       <td className="px-4 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {/* Publish/Unpublish - শুধু আইকন */}
                           {!isPending && (
                             <button
-                              onClick={() => handleToggleStatus(book._id, statusKey)}
+                              onClick={() =>
+                                handleToggleStatus(book._id, statusKey)
+                              }
                               className={`p-2 rounded-lg transition-all ${
-                                isPublished 
-                                  ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 hover:shadow-[0_0_20px_rgba(16,185,129,0.1)]' 
+                                isPublished
+                                  ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 hover:shadow-[0_0_20px_rgba(16,185,129,0.1)]'
                                   : 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/20 hover:shadow-[0_0_20px_rgba(245,158,11,0.1)]'
                               }`}
-                              title={isPublished ? 'Unpublish Book' : 'Publish Book'}
+                              title={
+                                isPublished ? 'Unpublish Book' : 'Publish Book'
+                              }
                             >
                               {isPublished ? (
                                 <CheckCircle size={16} />
@@ -322,7 +416,6 @@ export default function ManageBooksTable({
                             </button>
                           )}
 
-                          {/* View Button - Pending Books */}
                           {isPending && (
                             <Link
                               href="/dashboard/admin/book-approvals"
@@ -333,9 +426,10 @@ export default function ManageBooksTable({
                             </Link>
                           )}
 
-                          {/* Delete Button */}
                           <button
-                            onClick={() => handleDeleteClick(book._id, book.title)}
+                            onClick={() =>
+                              handleDeleteClick(book._id, book.title)
+                            }
                             className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-all hover:shadow-[0_0_20px_rgba(239,68,68,0.1)]"
                             title="Delete Book"
                           >
@@ -350,6 +444,60 @@ export default function ManageBooksTable({
             </AnimatePresence>
           </tbody>
         </table>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-white/[0.06] bg-[#0E1330]/40">
+            <span className="text-xs text-[#8890B5]">
+              Showing {startIndex + 1}–{Math.min(endIndex, totalItems)} of{' '}
+              {totalItems}
+            </span>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg border border-white/[0.06] bg-[#0E1330]/50 text-gray-400 hover:text-white hover:bg-[#6D4AFF] disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-all"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              {getPageNumbers().map((page, index) => {
+                if (page === '...') {
+                  return (
+                    <span
+                      key={`ellipsis-${index}`}
+                      className="w-8 text-center text-gray-500 text-xs"
+                    >
+                      …
+                    </span>
+                  );
+                }
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`w-8 h-8 text-xs font-bold rounded-lg border transition-all ${
+                      currentPage === page
+                        ? 'bg-[#6D4AFF] border-[#6D4AFF] text-white shadow-[0_0_15px_rgba(109,74,255,0.3)]'
+                        : 'border-white/[0.06] bg-[#0E1330]/50 text-gray-400 hover:text-white hover:border-white/[0.15]'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg border border-white/[0.06] bg-[#0E1330]/50 text-gray-400 hover:text-white hover:bg-[#6D4AFF] disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-all"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
