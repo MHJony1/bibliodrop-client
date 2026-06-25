@@ -41,7 +41,7 @@ export default function ManageBooksPage() {
   const handleToggleStatus = async (bookId, status) => {
     const result = await handleToggleBookStatusAction(bookId, status);
     if (result.success) {
-      await loadBooks(); // Refresh table
+      await loadBooks();
     }
     return result;
   };
