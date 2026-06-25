@@ -9,9 +9,6 @@ import {
   Clock,
   TrendingUp,
   TrendingDown,
-  Activity,
-  CheckCircle,
-  AlertCircle,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 

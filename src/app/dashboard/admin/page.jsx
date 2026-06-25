@@ -4,7 +4,7 @@ import { requireRole } from '@/lib/core/session';
 import AdminStats from '@/components/dashboardrelated/adminrelated/AdminStats';
 import CategoryChart from '@/components/dashboardrelated/adminrelated/CategoryChart';
 import RevenueChart from '@/components/dashboardrelated/adminrelated/RevenueChart';
-import { Shield, Activity, Zap, TrendingUp } from 'lucide-react';
+import { Shield, Activity } from 'lucide-react';
 
 export default async function AdminDashboard() {
   const sessionUser = await requireRole('admin');
@@ -33,7 +33,7 @@ export default async function AdminDashboard() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/20 backdrop-blur-sm">
+            <div className="p-3 rounded-2xl bg-linear-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/20 backdrop-blur-sm">
               <Shield size={22} className="text-violet-400" />
             </div>
             <div>
