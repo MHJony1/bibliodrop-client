@@ -20,7 +20,7 @@ import { authClient } from '@/lib/auth-client';
 import toast from 'react-hot-toast';
 
 /* ─────────────────────────────────────────
-    NAV LINKS (WITH SECTIONS)
+    NAV LINKS
 ───────────────────────────────────────── */
 const navLinks = [
   { label: 'Home', href: '/' },
@@ -73,11 +73,10 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(true);
 
-  // ─ Intersection Observer
   const [activeSection, setActiveSection] = useState('home');
   const userMenuRef = useRef(null);
 
-  // Helper function to get the dynamic dashboard path based on role
+  // ✅ Get dashboard path based on role
   const getDashboardPath = () => {
     if (!user?.role) return '/dashboard/user';
     const role = user.role.toLowerCase();
@@ -85,6 +84,9 @@ export default function Navbar() {
     if (role === 'librarian') return '/dashboard/librarian';
     return '/dashboard/user';
   };
+
+  // ✅ Check if user is authenticated
+  const isAuthenticated = !!user;
 
   useEffect(() => {
     setMounted(true);
@@ -100,7 +102,7 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', fn);
   }, []);
 
-  // ── Intersection Observer:
+  // ── Intersection Observer ──
   useEffect(() => {
     if (pathname !== '/') return;
 
@@ -160,7 +162,7 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', fn);
   }, []);
 
-  // pathname wise navbar hide
+  // ✅ Dashboard routes এ navbar hide
   if (pathname.includes('dashboard')) {
     return null;
   }
@@ -261,7 +263,7 @@ export default function Navbar() {
             </div>
           </Link>
 
-          {/* DESKTOP LINKS */}
+          {/* ✅ DESKTOP LINKS - সবসময় দেখাবে */}
           <ul className="hidden lg:flex items-center gap-0.5 list-none m-0 p-0 flex-1 justify-center">
             {navLinks.map((link) => {
               const active = isActive(link);
@@ -283,8 +285,9 @@ export default function Navbar() {
             })}
           </ul>
 
-          {/* RIGHT ACTIONS */}
+          {/* ✅ RIGHT ACTIONS - Authentication based */}
           <div className="flex items-center gap-2 shrink-0">
+            {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
               aria-label="Toggle theme"
@@ -293,7 +296,8 @@ export default function Navbar() {
               {isDark ? <Moon size={15} /> : <Sun size={15} />}
             </button>
 
-            {!user && (
+            {/* ✅ NOT LOGGED IN - Show Login/Register */}
+            {!isAuthenticated && (
               <>
                 <Link
                   href="/auth/login"
@@ -310,7 +314,8 @@ export default function Navbar() {
               </>
             )}
 
-            {user && (
+            {/* ✅ LOGGED IN - Show User Menu */}
+            {isAuthenticated && (
               <div ref={userMenuRef} className="hidden lg:block relative">
                 <button
                   onClick={() => setUserMenuOpen((v) => !v)}
@@ -378,6 +383,7 @@ export default function Navbar() {
               </div>
             )}
 
+            {/* Mobile Menu Toggle */}
             <button
               onClick={() => setMobileOpen((v) => !v)}
               aria-label="Toggle menu"
@@ -400,7 +406,7 @@ export default function Navbar() {
         </nav>
       </motion.header>
 
-      {/* MOBILE DRAWER */}
+      {/* ✅ MOBILE DRAWER - Authentication based */}
       <AnimatePresence>
         {mobileOpen && (
           <>
@@ -421,7 +427,8 @@ export default function Navbar() {
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               className="fixed top-0 right-0 bottom-0 z-40 lg:hidden w-[min(300px,100vw)] flex flex-col bg-white dark:bg-[#08092A] border-l border-black/8 dark:border-white/8 shadow-[-16px_0_48px_rgba(0,0,0,0.1)] dark:shadow-[-16px_0_48px_rgba(0,0,0,0.6)] pt-[80px] pb-8"
             >
-              {user && (
+              {/* User Profile - Only when logged in */}
+              {isAuthenticated && (
                 <div className="mx-4 mb-3 p-3.5 rounded-2xl border border-black/6 dark:border-white/8 bg-black/3 dark:bg-white/4 flex items-center gap-3">
                   <Avatar user={user} size={40} />
                   <div className="min-w-0">
@@ -435,6 +442,7 @@ export default function Navbar() {
                 </div>
               )}
 
+              {/* Navigation Links */}
               <div className="flex flex-col gap-0.5 px-4 flex-1 overflow-y-auto">
                 {navLinks.map((link, i) => {
                   const active = isActive(link);
@@ -460,7 +468,8 @@ export default function Navbar() {
                   );
                 })}
 
-                {user && (
+                {/* Dashboard link - Only when logged in */}
+                {isAuthenticated && (
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -477,6 +486,7 @@ export default function Navbar() {
                 )}
               </div>
 
+              {/* Bottom Actions */}
               <div className="px-4 pt-4 flex flex-col gap-2.5 border-t border-black/6 dark:border-white/8 mt-3">
                 <button
                   onClick={toggleTheme}
@@ -490,7 +500,8 @@ export default function Navbar() {
                   {isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
                 </button>
 
-                {!user ? (
+                {/* ✅ Auth buttons based on login status */}
+                {!isAuthenticated ? (
                   <>
                     <Link
                       href="/auth/login"
